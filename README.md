@@ -4,9 +4,17 @@
 ※ us-east-1/ap-northeast-1 の両方でデプロイ可能になりました。
 
 ## バージョン情報
-**v2.0.5** (2026年4月)
+**v2.0.6** (2026年5月)
 
 ## 更新情報
+2026年5月
+- 更新内容
+  - AgentAssistanceOrchestration-jpn がケース更新リクエスト（件名と概要）に対応(UpdateCase,GetContactAttributes ツールを追加)
+容
+  - RecommendationAIAgentAIAgent-jpn が推奨メッセージに対応（会話要約、ケース更新等の推奨メッセージの設定手順を追加）
+容
+  - AC_PKG_self_service_to_agent_Inbound_flow コンタクトフローに AI ボットの対応要約を反映したケースポップアップ処理を追加
+
 2026年4月
 - 更新内容
   - Amazon Connect Cases が会話内容の要約に対応（ドキュメント更新）
