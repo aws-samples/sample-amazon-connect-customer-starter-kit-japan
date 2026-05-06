@@ -14,6 +14,7 @@
   - RecommendationAIAgentAIAgent-jpn が推奨メッセージに対応（会話要約、ケース更新等の推奨メッセージの設定手順を追加）
 容
   - AC_PKG_self_service_to_agent_Inbound_flow コンタクトフローに AI ボットの対応要約を反映したケースポップアップ処理を追加
+  - AI エージェントに Amazon Bedrock AgentCore を使用した MCP サーバーをツールとして追加する手順を追加（オプションで手順書に従って設定する事で動作確認可能）
 
 2026年4月
 - 更新内容
