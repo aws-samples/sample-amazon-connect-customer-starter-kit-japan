@@ -1,5 +1,5 @@
 {
-  "version": "2.0.5",
+  "version": "2.0.6",
   "contactSearchUrl": "https://xxxxx.my.connect.aws/contact-search",
   "maxContactAttributes": 10,
   "contactAttributes": {
