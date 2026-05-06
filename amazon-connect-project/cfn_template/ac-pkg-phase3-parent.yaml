@@ -117,6 +117,7 @@ Resources:
         QicPrefix: !Ref 'AWS::StackName'
         ConnectInstanceArn: !Ref ConnectInstanceArn
         Region: !Ref Region
+        CasesDomainId: !Ref CasesDomainId
 
   # 4. Contact Flow Stack
   ContactFlowStack:

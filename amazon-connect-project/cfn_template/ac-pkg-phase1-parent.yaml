@@ -389,8 +389,8 @@ Resources:
   # 6. Connect Instance（ストレージ）
   # ========================================
 
-  # Amazon Connect で録音を有効化
-  ConnectInstanceStorageConfig:
+  # Amazon Connect でVoice録音を有効化
+  ConnectInstanceStorageConfigVoice:
     Type: AWS::Connect::InstanceStorageConfig
     Condition: ShouldCreateNewInstance
     DependsOn: 
@@ -403,6 +403,25 @@ Resources:
       S3Config:
         BucketName: !Ref ConnectS3Bucket
         BucketPrefix: "CallRecordings"
+        EncryptionConfig:
+          EncryptionType: KMS
+          KeyId: !GetAtt ConnectKMSKey.Arn
+
+  # Amazon Connect でChat記録を有効化
+  ConnectInstanceStorageConfigChat:
+    Type: AWS::Connect::InstanceStorageConfig
+    Condition: ShouldCreateNewInstance
+    DependsOn: 
+      - ConnectInstance
+      - ConnectS3BucketPolicy
+      - ConnectInstanceStorageConfigVoice
+    Properties:
+      InstanceArn: !GetAtt ConnectInstance.Arn
+      ResourceType: CHAT_TRANSCRIPTS
+      StorageType: S3
+      S3Config:
+        BucketName: !Ref ConnectS3Bucket
+        BucketPrefix: "ChatTranscripts"
         EncryptionConfig:
           EncryptionType: KMS
           KeyId: !GetAtt ConnectKMSKey.Arn
