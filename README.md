@@ -40,10 +40,10 @@
 - 初回リリース
 - 内容一覧
   - Amazon Connect Customer Profiles と Amazon Connect Cases を使用した着信ポップアップと応対履歴管理
-  - Amazon Connect Contact Lens による会話の文字おこし
-  - Amazon Q in Connect によるエージェントアシスト機能の活用 (マニュアルサーチ)
-  - Amazon Q in Connect による通話中のリアルタイムの回答提案の表示 (レコメンデーション)
-  - Amazon Q in Connect による音声ボット (セルフサービス)、エージェントへのエスカレーション
+  - Amazon Connect conversational analytics による会話の文字おこし
+  - Amazon Connect AI agents によるエージェントアシスト機能の活用 (マニュアルサーチ)
+  - Amazon Connect AI agents による通話中のリアルタイムの回答提案の表示 (レコメンデーション)
+  - Amazon Connect AI agents による音声ボット (セルフサービス)、エージェントへのエスカレーション
   - 3rd Party App を統合したエージェントワークスペース
     - 発信者 ID 番号選択
     - 通話履歴表示
