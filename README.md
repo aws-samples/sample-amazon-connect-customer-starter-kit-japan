@@ -12,7 +12,7 @@
   - デプロイメントガイドの記載内容を Amazon Connect Customer に更新
   - コンタクトフローモジュールを更新し、コンタクト後の会話要約の日本語対応を反映
   - オペレータとセルフサービス用の評価フォームとルールの設定を新規に追加し、生成 AI による会話の自動評価（日本語対応）を反映
-  - オーケストレーションタイプの AI プロンプトについて、![AI プロンプトのキャッシュ最適化](https://docs.aws.amazon.com/ja_jp/connect/latest/adminguide/create-ai-prompts.html#guidelines-optimize-prompt)を実施
+  - オーケストレーションタイプの AI プロンプトについて、[AI プロンプトのキャッシュ最適化](https://docs.aws.amazon.com/ja_jp/connect/latest/adminguide/create-ai-prompts.html#guidelines-optimize-prompt)を実施
 
 2026年5月
 - 更新内容
