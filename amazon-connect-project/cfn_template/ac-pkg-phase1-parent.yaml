@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: 'Amazon Connect Instance with Customer Profiles and Amazon Connect AI agent'
+Description: 'Amazon Connect Customer Instance with Customer Profiles and Amazon Connect AI agent'
 
 Metadata:
   AWS::CloudFormation::Interface:

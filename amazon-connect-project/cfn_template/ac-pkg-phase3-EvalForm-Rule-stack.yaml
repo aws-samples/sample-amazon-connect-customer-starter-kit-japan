@@ -1,0 +1,613 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Amazon Connect Evaluation Form- Auto-Evaluation Enabled Version'
+
+Parameters:
+  ConnectInstanceArn:
+    Type: String
+    Description: 'Amazon Connect Instance ARN'
+
+Resources:
+  ConnectEvaluationFormAiBot:
+    Type: AWS::Connect::EvaluationForm
+    Properties:
+      AutoEvaluationConfiguration: 
+        Enabled: TRUE
+      Description: 'セルフサービス向け評価フォーム（自動評価対応）'
+      InstanceArn: !Ref ConnectInstanceArn
+      Items:
+        # セクション1: 第一印象（重み: 25%）
+        - Section:
+            Instructions: 'このセクションでは、AIエージェント（AI Bot）が受け答えによって、顧客に安心感を与えたかを評価します。'
+            RefId: 'Section1'
+            Title: '丁寧な言葉遣い'
+            Weight: 25.0
+            Items:
+              # 質問1.1: 適切な挨拶
+              - Question:
+                  Instructions: 'AIエージェント（AI Bot）は敬語を正しく使い、丁寧で落ち着いた口調で対応したか。'
+                  NotApplicableEnabled: TRUE
+                  QuestionType: SINGLESELECT
+                  QuestionTypeProperties:
+                    SingleSelect:
+                      Automation:
+                        AnswerSource:
+                          SourceType: GEN_AI
+                      DisplayAs: RADIO
+                      Options:
+                        - RefId: 'Question1_1_Yes'
+                          Text: 'はい'
+                          Score: 10
+                        - RefId: 'Question1_1_No'
+                          Text: 'いいえ'
+                          Score: 0
+                  Title: '適切な挨拶'
+                  RefId: 'Question1_1'
+        - Section:
+            Instructions: 'このセクションでは、AIエージェント（AI Bot）が顧客の用件を正確に把握し、適切な情報を提供したかを評価します。'
+            RefId: 'Section2'
+            Title: '用件把握・正確な対応'
+            Weight: 25.0
+            Items:
+              # 質問2.1: 初回発話の意図理解
+              - Question:
+                  Instructions: 'AIエージェント（AI Bot）は顧客の最初の発話から、質問や問い合わせの意図を理解して、回答できたか。'
+                  NotApplicableEnabled: TRUE
+                  QuestionType: SINGLESELECT
+                  QuestionTypeProperties:
+                    SingleSelect:
+                      Automation:
+                        AnswerSource:
+                          SourceType: GEN_AI
+                      DisplayAs: RADIO
+                      Options:
+                        - RefId: 'Question2_1_Yes'
+                          Text: 'はい'
+                          Score: 10
+                        - RefId: 'Question2_1_No'
+                          Text: 'いいえ'
+                          Score: 0
+                  Title: '初回発話の意図理解​'
+                  RefId: 'Question2_1'
+              # 質問2.2: 用件の正確な把握​
+              - Question:
+                  Instructions: 'AIエージェント（AI Bot）は顧客の用件（繰上返済の相談、IT サポートに関する相談、クレジットカードに関する質問・依頼等）を正確に理解し、適切な対応を行ったか。​'
+                  NotApplicableEnabled: TRUE
+                  QuestionType: SINGLESELECT
+                  QuestionTypeProperties:
+                    SingleSelect:
+                      Automation:
+                        AnswerSource:
+                          SourceType: GEN_AI
+                      DisplayAs: RADIO
+                      Options:
+                        - RefId: 'Question2_2_Yes'
+                          Text: 'はい'
+                          Score: 10
+                        - RefId: 'Question2_2_No'
+                          Text: 'いいえ'
+                          Score: 0
+                  Title: '用件の正確な把握​​'
+                  RefId: 'Question2_2'
+              # 質問2.3: 回答の正確性
+              - Question:
+                  Instructions: 'AIエージェント（AI Bot）が提供した情報は正確だったか。誤った情報や曖昧な回答をしていないか。​'
+                  NotApplicableEnabled: TRUE
+                  QuestionType: SINGLESELECT
+                  QuestionTypeProperties:
+                    SingleSelect:
+                      Automation:
+                        AnswerSource:
+                          SourceType: GEN_AI
+                      DisplayAs: RADIO
+                      Options:
+                        - RefId: 'Question2_3_5'
+                          Text: '優秀（5）'
+                          Score: 10
+                        - RefId: 'Question2_3_4'
+                          Text: '良好（4）'
+                          Score: 8
+                        - RefId: 'Question2_3_3'
+                          Text: '標準（3）'
+                          Score: 6
+                        - RefId: 'Question2_3_2'
+                          Text: '要改善（2）'
+                          Score: 3
+                        - RefId: 'Question2_3_1'
+                          Text: '不可（1）'
+                          Score: 0
+                  Title: '回答の正確性​​'
+                  RefId: 'Question2_3'
+        - Section:
+            Instructions: 'このセクションでは、AIエージェント（AI Bot）の顧客対応のしめくくりを評価します。'
+            RefId: 'Section3'
+            Title: 'クロージング・エスカレーション判断'
+            Weight: 25.0
+            Items:
+              # 質問3.1: 適切なクロージング
+              - Question:
+                  Instructions: 'AIエージェント（AI Bot）は通話の最後に、対応内容の要約、残対応事項の説明、お礼の言葉を述べて適切に通話を終了したか。​'
+                  NotApplicableEnabled: TRUE
+                  QuestionType: SINGLESELECT
+                  QuestionTypeProperties:
+                    SingleSelect:
+                      Automation:
+                        AnswerSource:
+                          SourceType: GEN_AI
+                      DisplayAs: RADIO
+                      Options:
+                        - RefId: 'Question3_1_Yes'
+                          Text: 'はい'
+                          Score: 10
+                        - RefId: 'Question3_1_No'
+                          Text: 'いいえ'
+                          Score: 0
+                  Title: '適切なクロージング'
+                  RefId: 'Question3_1'
+              # 質問3.2: 適切なエスカレーション
+              - Question:
+                  Instructions: 'AIエージェント（AI Bot）は解決できない場合は、あいまいな回答をせずに適切に人間のエージェントにエスカレーションできたか。会話内容からエスカレーション先（クレジットカード、その他など）を提示できたか。​​'
+                  NotApplicableEnabled: TRUE
+                  QuestionType: SINGLESELECT
+                  QuestionTypeProperties:
+                    SingleSelect:
+                      Automation:
+                        AnswerSource:
+                          SourceType: GEN_AI
+                      DisplayAs: RADIO
+                      Options:
+                        - RefId: 'Question3_2_Yes'
+                          Text: 'はい'
+                          Score: 10
+                        - RefId: 'Question3_2_No'
+                          Text: 'いいえ'
+                          Score: 0
+                  Title: '適切なエスカレーション'
+                  RefId: 'Question3_2'
+        - Section:
+            Instructions: 'このセクションでは、AIエージェント（AI Bot）が対応範囲外の質問に対して適切に断り、事実に基づかない情報を生成しなかったかを評価します。'
+            RefId: 'Section4'
+            Title: 'ガードレール・安全性'
+            Weight: 25.0
+            Items:
+              # 質問4.1: 曖昧な表現への対応
+              - Question:
+                  Instructions: 'AIエージェント（AI Bot）は顧客が曖昧な言い方をした場合に適切に確認や質問を行って確認をしたか​。​'
+                  NotApplicableEnabled: TRUE
+                  QuestionType: SINGLESELECT
+                  QuestionTypeProperties:
+                    SingleSelect:
+                      Automation:
+                        AnswerSource:
+                          SourceType: GEN_AI
+                      DisplayAs: RADIO
+                      Options:
+                        - RefId: 'Question4_1_Yes'
+                          Text: 'はい'
+                          Score: 10
+                        - RefId: 'Question4_1_No'
+                          Text: 'いいえ'
+                          Score: 0
+                  Title: '曖昧な表現への対応​​'
+                  RefId: 'Question4_1'
+              # 質問4.2: 範囲外の質問への対応​
+              - Question:
+                  Instructions: 'AIエージェント（AI Bot）は対応範囲外の質問に対して適切に断り、代替案を提示したか​。'
+                  NotApplicableEnabled: TRUE
+                  QuestionType: SINGLESELECT
+                  QuestionTypeProperties:
+                    SingleSelect:
+                      Automation:
+                        AnswerSource:
+                          SourceType: GEN_AI
+                      DisplayAs: RADIO
+                      Options:
+                        - RefId: 'Question4_2_Yes'
+                          Text: 'はい'
+                          Score: 10
+                        - RefId: 'Question4_2_No'
+                          Text: 'いいえ'
+                          Score: 0
+                  Title: '範囲外の質問への対応​​'
+                  RefId: 'Question4_2'
+      LanguageConfiguration:
+        FormLanguage: ja-JP
+      ScoringStrategy:
+        Mode: QUESTION_ONLY
+        Status: ENABLED
+      Status: ACTIVE
+      Tags:
+        - Key: DeploymentInfo
+          Value: AmazonConnectPackage
+      TargetConfiguration:
+        ContactInteractionType: AUTOMATED
+      Title: !Sub '${AWS::StackName}-AiBot-サンプル評価フォーム'
+
+  ConnectEvaluationFormHumanAgent:
+    Type: AWS::Connect::EvaluationForm
+    Properties:
+      AutoEvaluationConfiguration:
+        Enabled: TRUE
+      Description: '人間のエージェント向け評価フォーム（自動評価対応）'
+      InstanceArn: !Ref ConnectInstanceArn
+      Items:
+        # セクション1: 第一印象・挨拶（重み: 25%）
+        - Section:
+            Instructions: 'このセクションでは、エージェントが顧客との最初の接点でプロフェッショナルで安心感のある印象を与えられたかを評価します。'
+            RefId: 'Section1'
+            Title: '第一印象・挨拶'
+            Weight: 25.0
+            Items:
+              # 質問1.1: 適切な挨拶・名乗り
+              - Question:
+                  Instructions: 'エージェントは通話開始時に挨拶、会社名、自身の名前を名乗り、用件確認を行ったか。'
+                  NotApplicableEnabled: TRUE
+                  QuestionType: SINGLESELECT
+                  QuestionTypeProperties:
+                    SingleSelect:
+                      Automation:
+                        AnswerSource:
+                          SourceType: GEN_AI
+                      DisplayAs: RADIO
+                      Options:
+                        - RefId: 'Question1_1_Yes'
+                          Text: 'はい'
+                          Score: 10
+                        - RefId: 'Question1_1_No'
+                          Text: 'いいえ'
+                          Score: 0
+                  Title: '適切な挨拶・名乗り'
+                  RefId: 'Question1_1'
+              # 質問1.2: 丁寧な言葉遣い
+              - Question:
+                  Instructions: 'エージェントは通話全体を通じて敬語を正しく使い、丁寧で落ち着いた口調で対応したか。'
+                  NotApplicableEnabled: TRUE
+                  QuestionType: SINGLESELECT
+                  QuestionTypeProperties:
+                    SingleSelect:
+                      Automation:
+                        AnswerSource:
+                          SourceType: GEN_AI
+                      DisplayAs: RADIO
+                      Options:
+                        - RefId: 'Question1_2_Yes'
+                          Text: 'はい'
+                          Score: 10
+                        - RefId: 'Question1_2_No'
+                          Text: 'いいえ'
+                          Score: 0
+                  Title: '丁寧な言葉遣い'
+                  RefId: 'Question1_2'
+
+        # セクション2: 用件把握・正確な対応（重み: 25%）
+        - Section:
+            Instructions: 'このセクションでは、エージェントが顧客の用件を正確に把握し、適切な情報提供と問題解決を行ったかを評価します。'
+            RefId: 'Section2'
+            Title: '用件把握・正確な対応'
+            Weight: 25.0
+            Items:
+              # 質問2.1: 用件の正確な把握
+              - Question:
+                  Instructions: 'エージェントは顧客の用件（繰上返済の相談、ITサポートに関する相談、クレジットカードに関する質問・依頼等）を正確に理解し、適切な対応を行ったか。'
+                  NotApplicableEnabled: TRUE
+                  QuestionType: SINGLESELECT
+                  QuestionTypeProperties:
+                    SingleSelect:
+                      Automation:
+                        AnswerSource:
+                          SourceType: GEN_AI
+                      DisplayAs: RADIO
+                      Options:
+                        - RefId: 'Question2_1_Yes'
+                          Text: 'はい'
+                          Score: 10
+                        - RefId: 'Question2_1_No'
+                          Text: 'いいえ'
+                          Score: 0
+                  Title: '用件の正確な把握'
+                  RefId: 'Question2_1'
+              # 質問2.2: 回答の正確性
+              - Question:
+                  Instructions: 'エージェントが提供した情報は正確だったか。誤った情報や曖昧な回答をしていないか。'
+                  NotApplicableEnabled: TRUE
+                  QuestionType: SINGLESELECT
+                  QuestionTypeProperties:
+                    SingleSelect:
+                      Automation:
+                        AnswerSource:
+                          SourceType: GEN_AI
+                      DisplayAs: RADIO
+                      Options:
+                        - RefId: 'Question2_2_5'
+                          Text: '優秀（5）'
+                          Score: 10
+                        - RefId: 'Question2_2_4'
+                          Text: '良好（4）'
+                          Score: 8
+                        - RefId: 'Question2_2_3'
+                          Text: '標準（3）'
+                          Score: 6
+                        - RefId: 'Question2_2_2'
+                          Text: '要改善（2）'
+                          Score: 3
+                        - RefId: 'Question2_2_1'
+                          Text: '不可（1）'
+                          Score: 0
+                  Title: '回答の正確性'
+                  RefId: 'Question2_2'
+              # 質問2.3: 積極的な傾聴と確認
+              - Question:
+                  Instructions: 'エージェントは顧客の話を遮らずに最後まで聞き、理解した内容を復唱・確認したか。'
+                  NotApplicableEnabled: TRUE
+                  QuestionType: SINGLESELECT
+                  QuestionTypeProperties:
+                    SingleSelect:
+                      Automation:
+                        AnswerSource:
+                          SourceType: GEN_AI
+                      DisplayAs: RADIO
+                      Options:
+                        - RefId: 'Question2_3_Yes'
+                          Text: 'はい'
+                          Score: 10
+                        - RefId: 'Question2_3_No'
+                          Text: 'いいえ'
+                          Score: 0
+                  Title: '積極的な傾聴と確認'
+                  RefId: 'Question2_3'
+
+        # セクション3: クロージング・後処理（重み: 25%）
+        - Section:
+            Instructions: 'このセクションでは、エージェントが顧客対応を適切に締めくくり、必要な後処理を行ったかを評価します。'
+            RefId: 'Section3'
+            Title: 'クロージング・後処理'
+            Weight: 25.0
+            Items:
+              # 質問3.1: 適切なクロージング
+              - Question:
+                  Instructions: 'エージェントは通話の最後に、対応内容の要約、残対応事項の説明、お礼の言葉を述べて適切に通話を終了したか。'
+                  NotApplicableEnabled: TRUE
+                  QuestionType: SINGLESELECT
+                  QuestionTypeProperties:
+                    SingleSelect:
+                      Automation:
+                        AnswerSource:
+                          SourceType: GEN_AI
+                      DisplayAs: RADIO
+                      Options:
+                        - RefId: 'Question3_1_Yes'
+                          Text: 'はい'
+                          Score: 10
+                        - RefId: 'Question3_1_No'
+                          Text: 'いいえ'
+                          Score: 0
+                  Title: '適切なクロージング'
+                  RefId: 'Question3_1'
+              # 質問3.2: 追加ニーズの確認
+              - Question:
+                  Instructions: 'エージェントは通話終了前に「他にお手伝いできることはございますか」等、追加のニーズがないか確認したか。'
+                  NotApplicableEnabled: TRUE
+                  QuestionType: SINGLESELECT
+                  QuestionTypeProperties:
+                    SingleSelect:
+                      Automation:
+                        AnswerSource:
+                          SourceType: GEN_AI
+                      DisplayAs: RADIO
+                      Options:
+                        - RefId: 'Question3_2_Yes'
+                          Text: 'はい'
+                          Score: 10
+                        - RefId: 'Question3_2_No'
+                          Text: 'いいえ'
+                          Score: 0
+                  Title: '追加ニーズの確認'
+                  RefId: 'Question3_2'
+
+        # セクション4: 共感・顧客体験（重み: 25%）
+        - Section:
+            Instructions: 'このセクションでは、エージェントが顧客の感情に寄り添い、良好な顧客体験を提供できたかを評価します。'
+            RefId: 'Section4'
+            Title: '共感・顧客体験'
+            Weight: 25.0
+            Items:
+              # 質問4.1: 共感の表現
+              - Question:
+                  Instructions: 'エージェントは顧客の不満や困りごとに対して共感を示し、顧客の気持ちに寄り添った対応ができたか。'
+                  NotApplicableEnabled: TRUE
+                  QuestionType: SINGLESELECT
+                  QuestionTypeProperties:
+                    SingleSelect:
+                      Automation:
+                        AnswerSource:
+                          SourceType: GEN_AI
+                      DisplayAs: RADIO
+                      Options:
+                        - RefId: 'Question4_1_Yes'
+                          Text: 'はい'
+                          Score: 10
+                        - RefId: 'Question4_1_No'
+                          Text: 'いいえ'
+                          Score: 0
+                  Title: '共感の表現'
+                  RefId: 'Question4_1'
+              # 質問4.2: 保留時の配慮
+              - Question:
+                  Instructions: 'エージェントは保留にする際、理由と目安時間を伝え、保留解除時にお待たせしたことへのお詫びを述べたか。'
+                  NotApplicableEnabled: TRUE
+                  QuestionType: SINGLESELECT
+                  QuestionTypeProperties:
+                    SingleSelect:
+                      Automation:
+                        AnswerSource:
+                          SourceType: GEN_AI
+                      DisplayAs: RADIO
+                      Options:
+                        - RefId: 'Question4_2_Yes'
+                          Text: 'はい'
+                          Score: 10
+                        - RefId: 'Question4_2_No'
+                          Text: 'いいえ'
+                          Score: 0
+                  Title: '保留時の配慮'
+                  RefId: 'Question4_2'
+      LanguageConfiguration:
+        FormLanguage: ja-JP
+      ScoringStrategy:
+        Mode: QUESTION_ONLY
+        Status: ENABLED
+      Status: ACTIVE
+      Tags:
+        - Key: DeploymentInfo
+          Value: AmazonConnectPackage
+      TargetConfiguration:
+        ContactInteractionType: AGENT
+      Title: !Sub '${AWS::StackName}-HumanAgent-サンプル評価フォーム'
+
+  PostCallAutoEvaluationRuleHumanAgent:
+    Type: AWS::Connect::Rule
+    Properties:
+      Name: !Sub '${AWS::StackName}-HumanAgent-PostCall'
+      InstanceArn: !Ref ConnectInstanceArn
+      PublishStatus: 'PUBLISHED'
+      TriggerEventSource:
+        EventSourceName: 'OnPostCallAnalysisAvailable'
+      Function: !Sub |
+        {
+          "Version": "2022-11-25",
+          "RuleFunction": {
+            "Operator": "AND",
+            "Operands": [
+              {
+                "Operator": "NumberGreaterOrEqualTo",
+                "Operands": [10],
+                "ComparisonValue": "$.ContactLens.PostCall.Agent.AgentInteractionDurationSecs",
+                "Negate": false
+              }
+            ]
+          }
+        }
+      Actions:
+        AssignContactCategoryActions:
+          - {}
+        SubmitAutoEvaluationActions:
+          - EvaluationFormArn: !GetAtt ConnectEvaluationFormHumanAgent.EvaluationFormArn
+      Tags:
+        - Key: DeploymentInfo
+          Value: AmazonConnectPackage
+
+  PostCallAutoEvaluationRuleAiBot:
+    Type: AWS::Connect::Rule
+    Properties:
+      Name: !Sub '${AWS::StackName}-AiBot-PostCall'
+      InstanceArn: !Ref ConnectInstanceArn
+      PublishStatus: 'PUBLISHED'
+      TriggerEventSource:
+        EventSourceName: 'OnPostCallAnalysisAvailable'
+      Function: !Sub |
+        {
+          "Version": "2022-11-25",
+          "RuleFunction": {
+            "Operator": "AND",
+            "Operands": [
+              {
+                "Operator": "NumberGreaterOrEqualTo",
+                "Operands": [10],
+                "ComparisonValue": "$.ContactLens.PostCall.Automated.AutomatedInteractionDurationSecs",
+                "Negate": false
+              }
+            ]
+          }
+        }
+      Actions:
+        AssignContactCategoryActions:
+          - {}
+        SubmitAutoEvaluationActions:
+          - EvaluationFormArn: !GetAtt ConnectEvaluationFormAiBot.EvaluationFormArn
+      Tags:
+        - Key: DeploymentInfo
+          Value: AmazonConnectPackage
+
+  PostChatAutoEvaluationRuleHumanAgent:
+    Type: AWS::Connect::Rule
+    Properties:
+      Name: !Sub '${AWS::StackName}-HumanAgent-PostChat'
+      InstanceArn: !Ref ConnectInstanceArn
+      PublishStatus: 'PUBLISHED'
+      TriggerEventSource:
+        EventSourceName: 'OnPostChatAnalysisAvailable'
+      Function: !Sub |
+        {
+          "Version": "2022-11-25",
+          "RuleFunction": {
+            "Operator": "AND",
+            "Operands": [
+              {
+                "Operator": "NumberGreaterOrEqualTo",
+                "Operands": [10],
+                "ComparisonValue": "$.ContactLens.PostChat.Agent.AgentInteractionDurationSecs",
+                "Negate": false
+              }
+            ]
+          }
+        }
+      Actions:
+        AssignContactCategoryActions:
+          - {}
+        SubmitAutoEvaluationActions:
+          - EvaluationFormArn: !GetAtt ConnectEvaluationFormHumanAgent.EvaluationFormArn
+      Tags:
+        - Key: DeploymentInfo
+          Value: AmazonConnectPackage
+
+  PostChatAutoEvaluationRuleAiBot:
+    Type: AWS::Connect::Rule
+    Properties:
+      Name: !Sub '${AWS::StackName}-AiBot-PostChat'
+      InstanceArn: !Ref ConnectInstanceArn
+      PublishStatus: 'PUBLISHED'
+      TriggerEventSource:
+        EventSourceName: 'OnPostChatAnalysisAvailable'
+      Function: !Sub |
+        {
+          "Version": "2022-11-25",
+          "RuleFunction": {
+            "Operator": "AND",
+            "Operands": [
+              {
+                "Operator": "NumberGreaterOrEqualTo",
+                "Operands": [10],
+                "ComparisonValue": "$.ContactLens.PostChat.Automated.AutomatedInteractionDurationSecs",
+                "Negate": false
+              }
+            ]
+          }
+        }
+      Actions:
+        AssignContactCategoryActions:
+          - {}
+        SubmitAutoEvaluationActions:
+          - EvaluationFormArn: !GetAtt ConnectEvaluationFormAiBot.EvaluationFormArn
+      Tags:
+        - Key: DeploymentInfo
+          Value: AmazonConnectPackage
+
+
+Outputs:
+  HumanAgentEvaluationFormArn:
+    Description: 'ARN of the created evaluation form for human agent'
+    Value: !GetAtt ConnectEvaluationFormHumanAgent.EvaluationFormArn
+  AiBotEvaluationFormArn:
+    Description: 'ARN of the created evaluation form for AI Bot'
+    Value: !GetAtt ConnectEvaluationFormAiBot.EvaluationFormArn
+  HumanAgentPostCallRuleArn:
+    Description: 'ARN of the post-call auto-evaluation rule for human agent'
+    Value: !GetAtt PostCallAutoEvaluationRuleHumanAgent.RuleArn
+  AiBotPostCallRuleArn:
+    Description: 'ARN of the post-call auto-evaluation rule for AI Bot'
+    Value: !GetAtt PostCallAutoEvaluationRuleAiBot.RuleArn
+  HumanAgentPostChatRuleArn:
+    Description: 'ARN of the post-chat auto-evaluation rule for human agent'
+    Value: !GetAtt PostChatAutoEvaluationRuleHumanAgent.RuleArn
+  AiBotPostChatRuleArn:
+    Description: 'ARN of the post-chat auto-evaluation rule for AI Bot'
+    Value: !GetAtt PostChatAutoEvaluationRuleAiBot.RuleArn

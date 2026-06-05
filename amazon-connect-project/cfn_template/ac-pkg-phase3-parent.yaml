@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: 'Parent stack for Amazon Connect deployment'
+Description: 'Parent stack for Amazon Connect Customer deployment'
 
 Conditions:
   # us-east-1の場合のみWAFを作成
@@ -140,10 +140,19 @@ Resources:
         SelfServiceOrchestrationAIAgentArn: !GetAtt QiCAIAgentStack.Outputs.SelfServiceOrchestrationAIAgentArn
         SelfServiceOrchestrationAIAgentName: !GetAtt QiCAIAgentStack.Outputs.SelfServiceOrchestrationAIAgentName
 
-  # 5. 3rd Party App Stack  
-  ThirdPartyAppStack:
+  # 5. EvaluationForm and Rule  
+  EvaluationFormAndRuleStack:
     Type: AWS::CloudFormation::Stack
     DependsOn: ContactFlowStack
+    Properties:
+      TemplateURL: !Sub 'https://amazonconnect-${InstanceAlias}-app.s3.${AWS::Region}.amazonaws.com/amazon-connect-project/cfn_template/ac-pkg-phase3-EvalForm-Rule-stack.yaml'
+      Parameters:
+        ConnectInstanceArn: !Ref ConnectInstanceArn
+
+  # 6. 3rd Party App Stack
+  ThirdPartyAppStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: EvaluationFormAndRuleStack
     Properties:
       TemplateURL: !Sub 'https://amazonconnect-${InstanceAlias}-app.s3.${AWS::Region}.amazonaws.com/amazon-connect-project/cfn_template/ac-pkg-phase3-app-stack.yaml'
       Parameters:
@@ -164,7 +173,7 @@ Outputs:
     Description: 'ID of the ConversationalBot Stack'
     Value: !Ref ConversationalBotStack
   
-  CasesTemplateStack:
+  CasesTemplateStackId:
     Description: 'ID of the CasesTemplate Stack'
     Value: !Ref CasesTemplateStack
   
@@ -175,6 +184,10 @@ Outputs:
   ContactFlowStackId:
     Description: 'ID of the ConnectFlow Stack'
     Value: !Ref ContactFlowStack
+  
+  EvaluationFormAndRuleStackId:
+    Description: 'ID of the EvaluationFormAndRule Stack'
+    Value: !Ref EvaluationFormAndRuleStack
   
   ThirdPartyAppStackId:
     Description: 'ID of the Third Party App Stack'

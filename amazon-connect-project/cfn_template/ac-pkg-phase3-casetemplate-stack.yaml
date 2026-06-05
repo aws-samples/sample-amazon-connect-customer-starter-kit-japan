@@ -145,13 +145,13 @@ Resources:
 
 Outputs:
   TemplateId:
-    Description: '作成されたケーステンプレートID'
+    Description: 'Created CaseTemplate ID'
     Value: !GetAtt StandardCaseTemplate.TemplateId
   
   TemplateArn:
-    Description: 'ケーステンプレートARN'
+    Description: 'Created CaseTemplate ARN'
     Value: !GetAtt StandardCaseTemplate.TemplateArn
   
   LambdaFunctionArn:
-    Description: 'カスタムリソース用Lambda関数ARN'
+    Description: 'Created Lambda ARN for Custom Resources'
     Value: !GetAtt CasesFieldOptionsFunction.Arn
