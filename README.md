@@ -1,7 +1,7 @@
 # sample-amazon-connect-customer-starter-kit-japan
 
 ## お知らせ
-※ us-east-1/ap-northeast-1 の両方でデプロイ可能になりました。
+※ us-east-1/ap-northeast-1 の両方でデプロイ可能となっております
 
 ## バージョン情報
 **v2.0.7** (2026年6月)
