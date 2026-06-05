@@ -1,4 +1,4 @@
-# sample-amazon-connect-starter-kit-japan
+# sample-amazon-connect-customer-starter-kit-japan
 
 ## お知らせ
 ※ us-east-1/ap-northeast-1 の両方でデプロイ可能になりました。
