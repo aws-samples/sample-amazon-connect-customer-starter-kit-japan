@@ -1,12 +1,18 @@
 # sample-amazon-connect-customer-starter-kit-japan
 
 ## お知らせ
-※ us-east-1/ap-northeast-1 の両方でデプロイ可能となっております
+※ us-east-1/ap-northeast-1 の両方でデプロイ可能です。
 
 ## バージョン情報
-**v2.0.7** (2026年6月)
+**v2.0.8** (2026年10月)
 
 ## 更新情報
+2026年10月
+- 更新内容
+  - AI を活用したセルフサービスをノーコードでデプロイする Agentic CX designer を用いたセルフサービスのサンプルをパッケージに反映
+  - 会話に合わせて顧客の Web 画面をリアルタイムに連動する Live Sync のサンプルをパッケージに反映
+  - オペレータとセルフサービス用の評価フォーム設定の手順を簡素化（自動化）
+
 2026年6月
 - 更新内容
   - デプロイメントガイドの記載内容を Amazon Connect Customer に更新
@@ -106,7 +112,7 @@
 
 上から順に進み、手順を実施してください。
 
-1.  デプロイメントガイドをダウンロード:[**こちら**](docs/other_docs/AmazonConnectCustomerPackage_DeploymentGuide_20260605.pdf)
+1.  デプロイメントガイドをダウンロード:[**こちら**](docs/other_docs/AmazonConnectCustomerPackage_DeploymentGuide_20261002.pdf)
 1.  パラメーターシートをダウンロード:[**こちら**](docs/other_docs/AmazonConnectCustomerPackage_ParameterSheet.xlsx)
 1.  デプロイモジュールをダウンロード:[**こちら**](docs/other_docs/amazon-connect-project.zip)
 1.  デプロイメントガイドに従い作業を実施
