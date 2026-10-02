@@ -1,0 +1,12 @@
+{
+  "_comment": "配布後に S3 上のこのファイルを書き換えるだけで接続先を変更できます（再ビルド不要）。空文字の項目はビルド時の .env 値にフォールバックします。実キーはこのファイルに直接記入してください（クライアントに露出する前提の値です）。",
+  "connectInstanceId": "",
+  "connectContactFlowId": "",
+  "connectRegion": "ap-northeast-1",
+  "connectVoiceEndpoint": "",
+  "liveSyncDeploymentKey": "",
+  "liveSyncApiKey": "",
+  "customerId": "CUST-001",
+  "customerName": "AWS 太郎",
+  "customerOtherInfo": ""
+}
