@@ -96,17 +96,26 @@ Resources:
         LexBotName: !Sub '${AWS::StackName}-lex-aiagents' 
         LexBotAliasName: !Sub '${AWS::StackName}-demo' 
 
-  # 2. CasesTemplate Stack
-  CasesTemplateStack:
+  # 2. LiveSync and In-app Endpoint
+  InAppChannelEndpointStack:
     Type: AWS::CloudFormation::Stack
     DependsOn: ConversationalBotStack
+    Properties:
+      TemplateURL: !Sub 'https://amazonconnect-${InstanceAlias}-app.s3.${AWS::Region}.amazonaws.com/amazon-connect-project/cfn_template/ac-pkg-phase3-LiveSync-InApp-Channel.yaml'
+      Parameters:
+        ConnectInstanceId: !Select [1, !Split ['instance/', !Ref ConnectInstanceArn]]
+
+  # 3. CasesTemplate Stack
+  CasesTemplateStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: InAppChannelEndpointStack
     Properties:
       TemplateURL: !Sub 'https://amazonconnect-${InstanceAlias}-app.s3.${AWS::Region}.amazonaws.com/amazon-connect-project/cfn_template/ac-pkg-phase3-casetemplate-stack.yaml'
       Parameters:
         CasesDomainId: !Ref CasesDomainId
         CasesTemplateName: !Sub '${AWS::StackName}-cases-template'
 
-  # 3. QiC AI Agent Stack
+  # 4. QiC AI Agent Stack
   QiCAIAgentStack:
     Type: AWS::CloudFormation::Stack
     DependsOn: CasesTemplateStack
@@ -119,7 +128,7 @@ Resources:
         Region: !Ref Region
         CasesDomainId: !Ref CasesDomainId
 
-  # 4. Contact Flow Stack
+  # 5. Contact Flow Stack
   ContactFlowStack:
     Type: AWS::CloudFormation::Stack
     DependsOn: QiCAIAgentStack
@@ -140,7 +149,7 @@ Resources:
         SelfServiceOrchestrationAIAgentArn: !GetAtt QiCAIAgentStack.Outputs.SelfServiceOrchestrationAIAgentArn
         SelfServiceOrchestrationAIAgentName: !GetAtt QiCAIAgentStack.Outputs.SelfServiceOrchestrationAIAgentName
 
-  # 5. EvaluationForm and Rule  
+  # 6. EvaluationForm and Rule  
   EvaluationFormAndRuleStack:
     Type: AWS::CloudFormation::Stack
     DependsOn: ContactFlowStack
@@ -149,7 +158,7 @@ Resources:
       Parameters:
         ConnectInstanceArn: !Ref ConnectInstanceArn
 
-  # 6. 3rd Party App Stack
+  # 7. 3rd Party App Stack
   ThirdPartyAppStack:
     Type: AWS::CloudFormation::Stack
     DependsOn: EvaluationFormAndRuleStack
@@ -188,7 +197,11 @@ Outputs:
   EvaluationFormAndRuleStackId:
     Description: 'ID of the EvaluationFormAndRule Stack'
     Value: !Ref EvaluationFormAndRuleStack
-  
+
+  InAppChannelEndpointStackId:
+    Description: 'ID of the InAppChannelEndpoint Stack'
+    Value: !Ref InAppChannelEndpointStack
+
   ThirdPartyAppStackId:
     Description: 'ID of the Third Party App Stack'
     Value: !Ref ThirdPartyAppStack

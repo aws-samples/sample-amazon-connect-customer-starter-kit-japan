@@ -426,6 +426,26 @@ Resources:
           EncryptionType: KMS
           KeyId: !GetAtt ConnectKMSKey.Arn
 
+  # Amazon Connect で評価を有効化
+  ConnectContactEvaluationsStorageConfig:
+    Type: AWS::Connect::InstanceStorageConfig
+    Condition: ShouldCreateNewInstance
+    DependsOn: 
+      - ConnectInstance
+      - ConnectS3BucketPolicy
+      - ConnectInstanceStorageConfigVoice
+      - ConnectInstanceStorageConfigChat
+    Properties:
+      InstanceArn: !GetAtt ConnectInstance.Arn
+      ResourceType: CONTACT_EVALUATIONS
+      StorageType: S3
+      S3Config:
+        BucketName: !Ref ConnectS3Bucket
+        BucketPrefix: "ContactEvaluations"
+        EncryptionConfig:
+          EncryptionType: KMS
+          KeyId: !GetAtt ConnectKMSKey.Arn
+
   # ========================================
   # 7. Customer Profiles & Cases
   # ========================================

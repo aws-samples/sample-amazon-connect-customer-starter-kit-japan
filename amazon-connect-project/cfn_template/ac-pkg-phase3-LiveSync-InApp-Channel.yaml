@@ -1,0 +1,628 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  Connect endpoint sidecar for the agentic CX designer workshop. The two endpoints the Touchpoint SDK
+  calls to mint a contact: POST /chat proxies Amazon Connect StartChatContact for the text input mode,
+  and POST /voice proxies StartWebRTCContact for the voice and voiceMini modes. One HTTP API, one
+  inline-Python Lambda, two routes. Outputs ChatEndpoint and VoiceEndpoint, which are the only two
+  values the Touchpoint frontend consumes.
+
+# =============================================================================
+# WHY ONE TEMPLATE, AND WHAT IT REPLACES
+# =============================================================================
+# This supersedes two separate stacks a participant used to deploy by hand:
+# static/modalities/cft/start-chat-contact-api.yaml for Part 8 and
+# static/livesync/cft/startwebrtccontact-api.yaml for Part 9. Both remain in the tree for the
+# bring-your-own-account path and for anyone who wants the upstream samples; neither is deployed in a
+# Workshop Studio event any more, because unified-workshop-stack.yaml nests THIS template and passes it
+# the Connect instance id from its sibling stack's outputs.
+#
+# The consolidation is not tidying. It removes three specific problems:
+#
+#   * TWO STACKS FOR ONE CAPABILITY. Chat and voice differ only in which Connect API they call, and a
+#     participant needed both for Parts 8 and 9, so the room deployed two stacks and copied two URLs
+#     out of two Outputs tabs.
+#   * A REGION MAP THAT COULD SILENTLY PRODUCE NOTHING. The chat template is the upstream
+#     amazon-connect-chat-ui-examples sample, and it fetches its Lambda code from an AWS-owned bucket
+#     `<region>.start-chat-contact-proxy-cfn`, gating every resource AND every output on an
+#     `AllowedRegions` mapping. In an unmapped region that stack reports CREATE_COMPLETE, creates
+#     nothing, and returns no outputs. This template has no such dependency: its handler is inline, so
+#     it works in every Region the workshop supports and needs no region map at all.
+#   * AN INSTANCE-ID MISMATCH THAT READS AS A CREDENTIAL FAULT. The WebRTC template takes the instance
+#     from the request body and falls back to its parameter, while its IAM role is scoped to the
+#     parameter ? so a frontend configured with a different instance produced an AccessDenied on a
+#     healthy stack, which is documented in Part 9 as the likeliest failure on that step. Here the
+#     instance is read ONLY from the parameter and the request's copy is ignored, so that failure mode
+#     does not exist.
+#
+# NOT SAM, DELIBERATELY. The reference implementation this borrows its contract from is an AWS SAM
+# template with an external CodeUri and a package.json pinning @aws-sdk/client-connect. Workshop Studio
+# deploys plain CloudFormation from static/ and does not run `sam build`, so shipping that shape would
+# mean packaging to the assets bucket and post-processing the template to read the bucket and prefix
+# from parameters ? which reintroduces an S3-backed Code property for a handler that fits inline.
+# Python is used rather than Node for the same reason the WebRTC template uses it: the runtime bundles
+# boto3, whereas the Node runtimes do not guarantee @aws-sdk/client-connect is present, and a wrong
+# guess there surfaces as MODULE_NOT_FOUND at the worst possible moment.
+#
+# =============================================================================
+# SECURITY, STATED PLAINLY RATHER THAN LEFT IMPLICIT
+# =============================================================================
+# THESE ROUTES ARE UNAUTHENTICATED, and that is not an oversight. They are called from the BROWSER by
+# @amazon-connect-touchpoint/web, and a browser-called endpoint cannot hold a credential: anything the
+# bundle carries is readable by anyone who opens the page. So the exposure is that an anonymous caller
+# holding the URL can create a chat or WebRTC contact against the one instance named below, consuming
+# Connect capacity and possibly incurring charges.
+#
+# Two things bound it, and neither is authentication:
+#
+#   * THE INSTANCE IS FIXED by the ConnectInstanceId parameter and is never read from the request, so a
+#     caller cannot point the proxy at another instance.
+#   * THE STAGE IS THROTTLED by ThrottleRateLimit / ThrottleBurstLimit.
+#
+# ?? THERE IS DELIBERATELY NO CONTACT-FLOW ALLOW-LIST, and this is the one control that was traded away
+# rather than kept. The reference implementation gates the ContactFlowId a request may name, which is a
+# real third control. It cannot survive pre-deployment: the contact flows this workshop uses are
+# IMPORTED BY THE PARTICIPANT in Part 1 and Part 9 Step 1 and then wired by hand to their own agentic CX
+# designer workspace, application and alias, so no flow exists at provisioning time and none can be
+# named in a parameter. The alternative to trading it was keeping a manual deploy in Parts 8 and 9,
+# which is the friction this change exists to remove.
+#
+# What remains after the trade: an anonymous caller with the URL can start a contact into ANY flow in
+# the one fixed, throttled instance, rather than into one named flow. In a Workshop Studio account that
+# is deleted within 72 hours, holding only workshop flows, that is an accepted cost ? and it is not
+# worse than the state it replaces, where the same participant deployed the same unauthenticated
+# endpoint with an allow-list of exactly the one flow they had pasted in.
+#
+# NOT FINE FOR PRODUCTION. Put an authorizer, a CAPTCHA or a WAF in front of these endpoints, and
+# restore the flow allow-list, before anything customer-facing points at them.
+#
+# =============================================================================
+# WHAT THIS TEMPLATE DELIBERATELY DOES NOT DECLARE
+# =============================================================================
+#   * AWS::ApiGateway::Account ? the account-level singleton that sets the account-wide CloudWatch Logs
+#     role. Two stacks declaring it in one account contend over it and deleting either clears API
+#     Gateway logging for the other. scenario-backend.yaml refuses it for the same reason, and a
+#     participant deploys that one into the same account, so this must refuse it too. It is moot here
+#     regardless: this is an HTTP API, not a REST API, and HTTP API access logging needs no such role.
+#   * an API key or usage plan ? see the security note. A browser cannot hold one.
+#   * a contact flow, a Lex bot, or anything in the agentic CX designer plane. Those are authored by the
+#     participant and have no CloudFormation resource type.
+# =============================================================================
+
+Parameters:
+
+  # No default. The instance is the whole security boundary of this stack, so there is no value worth
+  # guessing. In a Workshop Studio event unified-workshop-stack.yaml passes
+  # !GetAtt ConnectStack.Outputs.ConnectInstanceId, so a participant never types it.
+  ConnectInstanceId:
+    Type: String
+    AllowedPattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    ConstraintDescription: Must be an Amazon Connect instance UUID, not an ARN.
+    Description: >-
+      The Amazon Connect instance contacts are created against. Fixed here and never read from the
+      request body, so the proxy cannot be redirected at another instance.
+
+  # '*' is the right default for a workshop: the Touchpoint playground runs from localhost on a port
+  # that varies by Part (4173, 5173 and 5175 all appear in the content), and a participant editing a
+  # CORS list to match their dev server is friction with no security value in a 72-hour account.
+  CorsAllowOrigin:
+    Type: String
+    Default: '*'
+    Description: >-
+      Allowed CORS origin. '*' permits any host, which is appropriate for a workshop. Narrow it for
+      anything longer-lived.
+
+  ThrottleRateLimit:
+    Type: Number
+    Default: 10
+    MinValue: 1
+    Description: Steady-state requests per second across both routes.
+
+  ThrottleBurstLimit:
+    Type: Number
+    Default: 20
+    MinValue: 1
+    Description: Burst ceiling across both routes.
+
+  # 7 rather than 30: a Workshop Studio account lives at most 72 hours, so a longer retention outlives
+  # the account it describes and only matters for a bring-your-own deploy.
+  LogRetentionInDays:
+    Type: Number
+    Default: 7
+    AllowedValues: [1, 3, 5, 7, 14, 30, 60, 90]
+    Description: CloudWatch Logs retention for the function's log group.
+
+  # 名前付きリソースの命名ベースには ${AWS::StackName} を使う。運用ルールとして
+  # StackName は半角 15 文字以内とする（例: acpkg3-livesync）。サフィックスは
+  # '-endpoints'（10 文字）を使うため、Lambda の FunctionName は最長でも
+  #   15 + len('-endpoints') = 25 文字となり、64 文字制約に十分収まる。
+  #
+  # 注意: この方式は「StackName が短い」ことを前提にしている。もしこのテンプレートを
+  # ネストして使う場合、CloudFormation が生成する子スタック名（<parent>-<logicalId>-<random>）
+  # は長くなり得るため、その運用では別途プレフィックス用パラメータの導入を検討すること。
+
+Resources:
+
+  # ---------------------------------------------------------------------------
+  # HTTP API ? one API, two routes
+  # ---------------------------------------------------------------------------
+  # HTTP API rather than REST: no stage path segment on the invoke URL with the $default stage, so the
+  # endpoint outputs read as a clean https://<api>/chat, and CORS is a property of the API rather than a
+  # mock OPTIONS method per route.
+  HttpApi:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: !Sub '${AWS::StackName}-endpoints'
+      Description: >-
+        Fronts StartChatContact and StartWebRTCContact for the Touchpoint SDK.
+      ProtocolType: HTTP
+      # ?? CORS IS CONFIGURED HERE AND NOWHERE ELSE. The handler sets no CORS headers of its own, and
+      # that split is deliberate rather than incidental: per the API Gateway developer guide, "If you
+      # configure CORS for an API, API Gateway ignores CORS headers returned from your backend
+      # integration" ? so headers set in both places are at best redundant and at worst, on a
+      # configuration that loses the API-level block, a duplicated Access-Control-Allow-Origin, which
+      # browsers reject. One place means one thing to change.
+      #
+      # Both routes need this block for different reasons. /chat is sent as application/json, which is
+      # NOT a CORS-simple content type, so it triggers an OPTIONS preflight that this answers. /voice is
+      # sent as text/plain specifically to stay CORS-simple and skip the preflight, but its response
+      # still needs the allow-origin header, which this also supplies.
+      CorsConfiguration:
+        AllowOrigins: [!Ref CorsAllowOrigin]
+        AllowMethods: [POST, OPTIONS]
+        AllowHeaders: [content-type]
+        MaxAge: 600
+
+  # ---------------------------------------------------------------------------
+  # Logs
+  # ---------------------------------------------------------------------------
+  # Declared with an explicit name rather than left for Lambda to create implicitly, so that deleting
+  # the stack removes it. An implicit group is created outside the stack, where teardown cannot reach it.
+  EndpointsLogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${AWS::StackName}-endpoints'
+      RetentionInDays: !Ref LogRetentionInDays
+
+  # ---------------------------------------------------------------------------
+  # IAM ? the two Connect actions, on this one instance
+  # ---------------------------------------------------------------------------
+  EndpointsRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: { Service: lambda.amazonaws.com }
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: logs
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              # Built by hand rather than from !GetAtt LogGroup.Arn: that attribute already ends in
+              # ':*', which would yield a malformed ':*:*' suffix.
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${AWS::StackName}-endpoints:*'
+        - PolicyName: start-contacts-on-this-instance-only
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - connect:StartChatContact
+                  - connect:StartWebRTCContact
+                # ?? BOTH ARNs ARE REQUIRED. Connect authorises these actions against the instance AND
+                # against the contact-flow resource, so granting only the instance fails at runtime with
+                # an AccessDenied that names the FLOW ? which reads as a wrong flow id rather than as a
+                # missing permission, and is the wrong place to start looking.
+                #
+                # The contact-flow ARN is a wildcard WITHIN the one instance, which is the flow
+                # allow-list trade recorded in the header: the flows this workshop uses are imported by
+                # the participant after provisioning, so no specific flow can be named here.
+                Resource:
+                  - !Sub 'arn:${AWS::Partition}:connect:${AWS::Region}:${AWS::AccountId}:instance/${ConnectInstanceId}'
+                  - !Sub 'arn:${AWS::Partition}:connect:${AWS::Region}:${AWS::AccountId}:instance/${ConnectInstanceId}/contact-flow/*'
+
+  # ---------------------------------------------------------------------------
+  # The handler ? one function, both routes
+  # ---------------------------------------------------------------------------
+  EndpointsFunction:
+    Type: AWS::Lambda::Function
+    DependsOn: EndpointsLogGroup
+    Properties:
+      FunctionName: !Sub '${AWS::StackName}-endpoints'
+      Description: >-
+        Proxies StartChatContact and StartWebRTCContact, returning each in the envelope the Touchpoint
+        SDK parses.
+      Runtime: python3.13
+      Handler: index.handler
+      Role: !GetAtt EndpointsRole.Arn
+      Architectures: [arm64]
+      MemorySize: 256
+      # Connect's own call is fast. 29s is the HTTP API integration ceiling and leaves room for a cold
+      # start plus one SDK-internal retry.
+      Timeout: 29
+      Environment:
+        Variables:
+          CONNECT_INSTANCE_ID: !Ref ConnectInstanceId
+      Code:
+        ZipFile: |
+          # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+          # SPDX-License-Identifier: MIT-0
+          """
+          The two endpoints the Touchpoint SDK calls to mint a contact.
+
+          Both request and response shapes below were taken from the GA Touchpoint
+          source rather than from prose, and each carries a trap that is invisible
+          until it bites. They are written out here because getting either wrong
+          produces a session that never opens and says nothing about why.
+          """
+          import base64
+          import json
+          import os
+          import re
+
+          import boto3
+
+          INSTANCE_ID = os.environ['CONNECT_INSTANCE_ID']
+
+          # The handler sets NO CORS headers: the HTTP API's own CorsConfiguration
+          # adds them, and API Gateway ignores integration CORS headers when that is
+          # configured. Setting them in both places is how a duplicated
+          # Access-Control-Allow-Origin ? which browsers reject ? gets introduced.
+          HEADERS = {'Content-Type': 'application/json'}
+
+          FLOW_ID = re.compile(r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-'
+                               r'[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$')
+
+          connect = boto3.client('connect')
+
+
+          class BadRequest(Exception):
+              """A fault in the request, reported as 4xx with a named code."""
+
+              def __init__(self, code, message, status=400):
+                  super().__init__(message)
+                  self.code = code
+                  self.status = status
+
+
+          def respond(status, payload):
+              return {
+                  'statusCode': status,
+                  'headers': HEADERS,
+                  'body': json.dumps(payload, default=str),
+              }
+
+
+          def parse_body(event):
+              """
+              Parse the request body as JSON REGARDLESS of its declared content type.
+
+              THIS IS THE /voice TRAP. The SDK sends the voice call as
+              `Content-Type: text/plain` on purpose, to keep it a CORS-simple request
+              and skip the preflight entirely ? but the body is still JSON. A handler
+              that branches on content type and only parses application/json sees an
+              empty request and reports a missing field, on a request that carried it.
+
+              The base64 decode is the other half of the same trap: API Gateway may
+              base64-encode a body whose declared type it does not recognise as text.
+              """
+              raw = event.get('body') or ''
+              if event.get('isBase64Encoded'):
+                  try:
+                      raw = base64.b64decode(raw).decode('utf-8')
+                  except Exception:
+                      raise BadRequest('INVALID_BODY', 'The request body is not valid base64.')
+              if not raw.strip():
+                  return {}
+              try:
+                  parsed = json.loads(raw)
+              except Exception as err:
+                  raise BadRequest('INVALID_BODY', 'The request body is not valid JSON: %s' % err)
+              if not isinstance(parsed, dict):
+                  raise BadRequest('INVALID_BODY', 'The request body must be a JSON object.')
+              return parsed
+
+
+          def contact_flow_id(body):
+              """
+              The flow to place the contact into, from the request.
+
+              It comes from the CALLER rather than from a parameter, because the flows
+              this workshop uses are imported by the participant after this stack is
+              provisioned, so none of them can be named at deploy time. The UUID shape
+              is checked so that a malformed value is a 400 naming the field rather
+              than a Connect validation error that reads as a service fault.
+              """
+              flow = body.get('ContactFlowId') or body.get('contactFlowId')
+              if not flow:
+                  raise BadRequest(
+                      'CONTACT_FLOW_ID_REQUIRED',
+                      'ContactFlowId is required. This endpoint places contacts into whichever flow the '
+                      'caller names, because the workshop flows are imported after it is deployed. Set it '
+                      'in the frontend configuration alongside the endpoint URL.')
+              if not FLOW_ID.match(str(flow)):
+                  raise BadRequest(
+                      'CONTACT_FLOW_ID_MALFORMED',
+                      'ContactFlowId must be a bare contact flow UUID, not an ARN and not a flow name. '
+                      'Find it under Routing then Flows, via "Show additional flow information".')
+              return str(flow)
+
+
+          def display_name(body):
+              """Three accepted spellings, because the SDK sends the name more than one way."""
+              details = body.get('ParticipantDetails') or {}
+              return (body.get('DisplayName')
+                      or (details.get('DisplayName') if isinstance(details, dict) else None)
+                      or 'Workshop participant')
+
+
+          def attributes(body):
+              """
+              Contact attributes, with every value coerced to a string.
+
+              Connect rejects a non-string attribute value, and the frontend sends
+              whatever the page had ? a number for a policy count, a boolean for a
+              flag. Coercing here turns a whole class of 400 into a working contact,
+              and the alternative is a validation error naming a field the page author
+              did not know was typed.
+              """
+              raw = body.get('Attributes') or {}
+              if not isinstance(raw, dict):
+                  raise BadRequest('INVALID_BODY', 'Attributes must be a JSON object.')
+              return {str(k): str(v) for k, v in raw.items() if v is not None}
+
+
+          def start_chat(body):
+              """
+              POST /chat ? StartChatContact.
+
+              ?? THE RESPONSE NESTING IS MANDATORY. The SDK reads
+              `data?.data?.startChatResult` and then dereferences it on the very next
+              line WITHOUT a guard. Return the result at the top level ? the obvious
+              choice ? and the SDK throws `TypeError: Cannot read properties of
+              undefined` inside itself, which presents as a chat that silently never
+              opens and says nothing whatsoever about the envelope.
+              """
+              params = {
+                  'InstanceId': INSTANCE_ID,
+                  'ContactFlowId': contact_flow_id(body),
+                  'ParticipantDetails': {'DisplayName': display_name(body)},
+                  'Attributes': attributes(body),
+                  'SupportedMessagingContentTypes':
+                      body.get('SupportedMessagingContentTypes') or ['text/plain'],
+              }
+              # Passed through only when present. Newer chat features use it and the
+              # SDK may or may not send it; inventing a default would constrain the
+              # contact subtype on every request.
+              if body.get('SegmentAttributes'):
+                  params['SegmentAttributes'] = body['SegmentAttributes']
+
+              result = connect.start_chat_contact(**params)
+              return {
+                  'data': {
+                      'startChatResult': {
+                          'ContactId': result.get('ContactId'),
+                          'ParticipantId': result.get('ParticipantId'),
+                          'ParticipantToken': result.get('ParticipantToken'),
+                      }
+                  }
+              }
+
+
+          def start_voice(body):
+              """
+              POST /voice ? StartWebRTCContact.
+
+              The response envelope is lenient here ? the SDK accepts the result at the
+              top level, under `data`, or under `startWebRtcResult` ? so it is returned
+              at the top level.
+
+              `ConnectionData` is passed through AS RECEIVED rather than projected
+              field by field, deliberately and unlike the chat route. The frontend
+              hands `Meeting` and `Attendee` to the Chime SDK verbatim, so
+              re-projecting their internals risks dropping a field it needs and the
+              loss would surface inside Chime rather than here. The chat route projects
+              explicitly because there the field set IS the contract.
+              """
+              params = {
+                  'InstanceId': INSTANCE_ID,
+                  'ContactFlowId': contact_flow_id(body),
+                  'ParticipantDetails': {'DisplayName': display_name(body)},
+                  'Attributes': attributes(body),
+                  'AllowedCapabilities': {
+                      'Customer': {'Video': 'SEND', 'ScreenShare': 'SEND'},
+                      'Agent': {'Video': 'SEND', 'ScreenShare': 'SEND'},
+                  },
+              }
+              result = connect.start_web_rtc_contact(**params)
+              result.pop('ResponseMetadata', None)
+              return result
+
+
+          ROUTES = {'/chat': start_chat, '/voice': start_voice}
+
+
+          def log(event, outcome, **fields):
+              """
+              One JSON line per request, carrying IDS ONLY.
+
+              A participant token is a credential. It is returned to the caller that
+              asked for it and is NEVER logged, even though the shipped WebRTC template
+              logs whole payloads by default and its own parameter documentation warns
+              about exactly that. There is no flag here to turn it on, because a flag
+              that can leak a credential eventually gets turned on.
+              """
+              line = {
+                  'route': (event or {}).get('rawPath'),
+                  'method': (((event or {}).get('requestContext') or {}).get('http') or {}).get('method'),
+                  'outcome': outcome,
+              }
+              line.update(fields)
+              print(json.dumps(line, default=str))
+
+
+          def error_status(err):
+              """
+              A service error's own status, so a throttle stays a throttle.
+
+              Connect's ThrottlingException carries 429 and passing it through lets the
+              caller back off instead of retrying into the same wall. A plain runtime
+              error carries no status and becomes 500 ? never None, which API Gateway
+              would answer with an opaque 502.
+              """
+              meta = getattr(err, 'response', None) or {}
+              return meta.get('ResponseMetadata', {}).get('HTTPStatusCode') or 500
+
+
+          def error_code(err):
+              meta = getattr(err, 'response', None) or {}
+              return meta.get('Error', {}).get('Code') or type(err).__name__
+
+
+          def handler(event, context):
+              path = (event or {}).get('rawPath') or ''
+              route = ROUTES.get(path)
+
+              # A path this API does not serve. Named rather than generic, because the
+              # two routes are easy to transpose between Part 8 and Part 9.
+              if route is None:
+                  log(event, 'no_such_route')
+                  return respond(404, {
+                      'error': 'NO_SUCH_ROUTE',
+                      'path': path,
+                      'message': 'This endpoint serves POST /chat and POST /voice. /chat starts a chat '
+                                 'contact for the text input mode; /voice starts a WebRTC contact for the '
+                                 'voice and voiceMini modes.',
+                  })
+
+              try:
+                  body = parse_body(event)
+                  result = route(body)
+              except BadRequest as err:
+                  log(event, 'bad_request', code=err.code)
+                  return respond(err.status, {'error': err.code, 'message': str(err)})
+              except Exception as err:
+                  # The full error goes to the log; only its message reaches the caller.
+                  status = error_status(err)
+                  code = error_code(err)
+                  log(event, 'failed', code=code, status=status, detail=str(err))
+                  return respond(status, {
+                      'error': code,
+                      'message': str(err),
+                      # The two most common causes, named so the reader does not start
+                      # at the credentials. An AccessDenied here is almost always the
+                      # contact-flow ARN rather than the instance ARN; an
+                      # InvalidRequestException is usually an unpublished flow or a flow
+                      # whose type is not valid for this channel.
+                      'hint': 'An AccessDeniedException here usually means the contact flow, not the '
+                              'instance. An InvalidRequestException usually means the flow is not '
+                              'published, or its type is not valid for this channel.',
+                  })
+
+              # Ids only. `ParticipantToken` is in `result` and stays out of the log.
+              inner = result.get('data', {}).get('startChatResult', result)
+              log(event, 'ok',
+                  contactId=inner.get('ContactId'),
+                  participantId=inner.get('ParticipantId'))
+              return respond(200, result)
+
+  # ---------------------------------------------------------------------------
+  # Wiring ? one integration, two routes, one stage
+  # ---------------------------------------------------------------------------
+  EndpointsIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref HttpApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !GetAtt EndpointsFunction.Arn
+      # 2.0 is what the handler reads: it takes the path from `rawPath` and the method
+      # from `requestContext.http.method`. Format 1.0 supplies `path` and `httpMethod`
+      # instead, so changing this silently routes every request to NO_SUCH_ROUTE.
+      PayloadFormatVersion: '2.0'
+      TimeoutInMillis: 29000
+
+  ChatRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref HttpApi
+      RouteKey: 'POST /chat'
+      AuthorizationType: NONE
+      Target: !Sub 'integrations/${EndpointsIntegration}'
+
+  VoiceRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref HttpApi
+      RouteKey: 'POST /voice'
+      AuthorizationType: NONE
+      Target: !Sub 'integrations/${EndpointsIntegration}'
+
+  # $default, so the invoke URL carries no stage path segment and the endpoint outputs
+  # read as https://<api>/chat rather than https://<api>/Prod/chat.
+  DefaultStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref HttpApi
+      StageName: $default
+      AutoDeploy: true
+      DefaultRouteSettings:
+        ThrottlingRateLimit: !Ref ThrottleRateLimit
+        ThrottlingBurstLimit: !Ref ThrottleBurstLimit
+
+  # One permission per route rather than one wildcard. An execute-api SourceArn is
+  # <api-id>/<stage>/<method><path>, so a single ARN cannot cover two distinct paths
+  # without widening the method and path segments to '*' ? which would let any route
+  # added later invoke this function without a deliberate grant.
+  ChatInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt EndpointsFunction.Arn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${HttpApi}/*/POST/chat'
+
+  VoiceInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt EndpointsFunction.Arn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${HttpApi}/*/POST/voice'
+
+# =============================================================================
+# OUTPUTS
+# =============================================================================
+# ChatEndpoint and VoiceEndpoint are the contract with the Touchpoint frontend, and they are what
+# unified-workshop-stack.yaml re-emits so they reach a participant's Event outputs page. Both carry no
+# stage path segment, because the API uses the $default stage.
+Outputs:
+
+  ChatEndpoint:
+    Description: >-
+      POST here to start a chat contact. This is the chat endpoint URL Part 8 asks for, and the value of
+      VITE_CONNECT_CHAT_ENDPOINT in the Touchpoint playground.
+    Value: !Sub '${HttpApi.ApiEndpoint}/chat'
+
+  VoiceEndpoint:
+    Description: >-
+      POST here to start a WebRTC contact. This is the voice endpoint URL Part 9 asks for, and the value
+      of VITE_CONNECT_VOICE_ENDPOINT in the Live Sync digital asset.
+    Value: !Sub '${HttpApi.ApiEndpoint}/voice'
+
+  ApiId:
+    Description: The HTTP API identifier, for log and metric lookups.
+    Value: !Ref HttpApi
+
+  FunctionLogGroup:
+    Description: >-
+      Where a failing request explains itself. One JSON line per request, carrying ids only - a
+      participant token is a credential and is never logged.
+    Value: !Ref EndpointsLogGroup
