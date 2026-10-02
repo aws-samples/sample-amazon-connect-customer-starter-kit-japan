@@ -1,0 +1,434 @@
+{
+  "flowId": "SampleEntryInsJp",
+  "nodes": {
+    "14fc2553-f29a-44ca-a731-69f8f476d551": {
+      "nodeId": "14fc2553-f29a-44ca-a731-69f8f476d551",
+      "childNodes": [
+        {
+          "nodeId": "16c7be20-ac3c-4510-b385-6e1e0c71a171",
+          "name": "",
+          "conditions": []
+        }
+      ],
+      "type": "basic",
+      "messages": [],
+      "modalities": {},
+      "metadata": {
+        "stateModifications": [
+          {
+            "type": "context",
+            "name": "customerId",
+            "modification": "set",
+            "value": {
+              "type": "constant",
+              "value": "{CustomerID:customerId}"
+            }
+          }
+        ],
+        "name": ""
+      },
+      "canvasMetadata": {
+        "x": -771.0831491780208,
+        "y": -834.1666666666666,
+        "width": 240,
+        "height": 127,
+        "isMinimized": false
+      }
+    },
+    "16c7be20-ac3c-4510-b385-6e1e0c71a171": {
+      "nodeId": "16c7be20-ac3c-4510-b385-6e1e0c71a171",
+      "childNodes": [
+        {
+          "nodeId": "ecaccd32-7a0a-4268-92de-3acb302e3697",
+          "name": "",
+          "conditions": []
+        }
+      ],
+      "type": "basic",
+      "messages": [
+        {
+          "messageId": "e74c9a23-af81-4d45-8b96-3a8d1e5f4c37",
+          "body": "ありがとうございます。 {customerId:NLX.Context}. 本人確認が完了しました。",
+          "type": "text",
+          "skipTranslation": false,
+          "metadata": {
+            "alternatePhrasings": []
+          }
+        }
+      ],
+      "modalities": {},
+      "metadata": {
+        "stateModifications": [],
+        "name": ""
+      },
+      "canvasMetadata": {
+        "x": -408.8331491780208,
+        "y": -834.1666666666666,
+        "width": 240,
+        "height": 163,
+        "isMinimized": false
+      }
+    },
+    "371b2d9c-3b84-4c2e-8c4a-3fb12288d90a": {
+      "nodeId": "371b2d9c-3b84-4c2e-8c4a-3fb12288d90a",
+      "childNodes": [
+        {
+          "nodeId": "9292fa2e-03f2-47cf-8d75-011541cbe687",
+          "name": "",
+          "conditions": []
+        },
+        {
+          "nodeId": "8ecb4b7b-e389-494e-a946-fc258c2e0090",
+          "name": "",
+          "conditions": [
+            {
+              "left": {
+                "type": "node_status"
+              },
+              "operator": "eq",
+              "right": {
+                "type": "constant",
+                "value": "continuation"
+              }
+            }
+          ]
+        }
+      ],
+      "type": "loop",
+      "messages": [],
+      "modalities": {},
+      "metadata": {
+        "stateModifications": [],
+        "name": "Retry (3 tries)",
+        "loop": {
+          "type": "range",
+          "start": 1,
+          "end": 3,
+          "name": "retry"
+        }
+      },
+      "canvasMetadata": {
+        "x": -1133.333333333333,
+        "y": -520.1666666666665,
+        "width": 240,
+        "height": 169,
+        "isMinimized": false,
+        "color": "magenta"
+      }
+    },
+    "6a5e57a9-68d2-4ea3-8db2-50b67f8091ba": {
+      "nodeId": "6a5e57a9-68d2-4ea3-8db2-50b67f8091ba",
+      "childNodes": [
+        {
+          "nodeId": "d85bfca1-0ade-466b-a910-4b649e167308",
+          "name": "",
+          "conditions": []
+        }
+      ],
+      "type": "start",
+      "messages": [],
+      "modalities": {},
+      "metadata": {
+        "stateModifications": [],
+        "name": ""
+      },
+      "canvasMetadata": {
+        "x": -1133.333333333333,
+        "y": -1113.1666666666665,
+        "width": 240,
+        "height": 259,
+        "isMinimized": false
+      }
+    },
+    "8dc3bf77-45d2-444f-9ed8-38bb3e2919d8": {
+      "nodeId": "8dc3bf77-45d2-444f-9ed8-38bb3e2919d8",
+      "childNodes": [
+        {
+          "nodeId": "caf0a96b-7587-4df6-b9c2-622780ab7c02",
+          "name": "",
+          "conditions": []
+        }
+      ],
+      "type": "basic",
+      "messages": [
+        {
+          "messageId": "b41f6d90-7c58-4a12-9e63-0d5a8b2c1f04",
+          "body": "AnyCompany Insuranceにお電話いただき、ありがとうございます。はじめにご本人様の確認をさせてください。",
+          "type": "text",
+          "skipTranslation": false,
+          "metadata": {
+            "alternatePhrasings": []
+          }
+        }
+      ],
+      "modalities": {},
+      "metadata": {
+        "stateModifications": [],
+        "name": ""
+      },
+      "canvasMetadata": {
+        "x": -1133.333333333333,
+        "y": -727.1666666666666,
+        "width": 240,
+        "height": 181,
+        "isMinimized": false
+      }
+    },
+    "8ecb4b7b-e389-494e-a946-fc258c2e0090": {
+      "nodeId": "8ecb4b7b-e389-494e-a946-fc258c2e0090",
+      "childNodes": [
+        {
+          "name": "",
+          "conditions": [
+            {
+              "left": {
+                "type": "node_status"
+              },
+              "operator": "eq",
+              "right": {
+                "type": "constant",
+                "value": "continuation"
+              }
+            }
+          ]
+        }
+      ],
+      "type": "escalate",
+      "messages": [
+        {
+          "messageId": "5d81b545-35d8-4dce-9896-ed15275cadc3",
+          "body": "対応可能な担当者におつなぎいたします。これまでの経緯は引き継ぎますので、最初から説明し直していただく必要はございません。",
+          "type": "text",
+          "skipTranslation": false,
+          "metadata": {
+            "alternatePhrasings": []
+          }
+        }
+      ],
+      "modalities": {},
+      "metadata": {
+        "stateModifications": [],
+        "name": "Escalate on repeated no-match"
+      },
+      "canvasMetadata": {
+        "x": -713.333333333333,
+        "y": -350.16666666666663,
+        "width": 240,
+        "height": 267,
+        "isMinimized": false,
+        "color": "red"
+      }
+    },
+    "9292fa2e-03f2-47cf-8d75-011541cbe687": {
+      "nodeId": "9292fa2e-03f2-47cf-8d75-011541cbe687",
+      "childNodes": [
+        {
+          "nodeId": "caf0a96b-7587-4df6-b9c2-622780ab7c02",
+          "name": "",
+          "conditions": []
+        }
+      ],
+      "type": "basic",
+      "messages": [
+        {
+          "messageId": "d63b8f12-9e70-4c34-9a85-2f7c0d4e3b26",
+          "body": "申し訳ございませんが、登録されている顧客IDと照合できませんでした。もう一度お伺いします。",
+          "type": "text",
+          "skipTranslation": false,
+          "metadata": {
+            "alternatePhrasings": []
+          }
+        }
+      ],
+      "modalities": {},
+      "metadata": {
+        "stateModifications": [
+          {
+            "type": "slot",
+            "name": "CustomerID",
+            "modification": "clear"
+          }
+        ],
+        "name": ""
+      },
+      "canvasMetadata": {
+        "x": -1133.333333333333,
+        "y": -260.16666666666663,
+        "width": 240,
+        "height": 213,
+        "isMinimized": false
+      }
+    },
+    "caf0a96b-7587-4df6-b9c2-622780ab7c02": {
+      "nodeId": "caf0a96b-7587-4df6-b9c2-622780ab7c02",
+      "childNodes": [
+        {
+          "nodeId": "14fc2553-f29a-44ca-a731-69f8f476d551",
+          "name": "",
+          "conditions": [
+            {
+              "operator": "exists",
+              "left": {
+                "type": "slot",
+                "name": "CustomerID"
+              }
+            }
+          ]
+        },
+        {
+          "nodeId": "371b2d9c-3b84-4c2e-8c4a-3fb12288d90a",
+          "name": "",
+          "conditions": [
+            {
+              "operator": "not_exists",
+              "left": {
+                "type": "slot",
+                "name": "CustomerID"
+              }
+            }
+          ]
+        }
+      ],
+      "type": "user_choice",
+      "messages": [
+        {
+          "messageId": "c52a7e01-8d69-4b23-8f74-1e6b9c3d2a15",
+          "body": "お客様の顧客IDは何ですか？例えば「CUST-001」です。",
+          "type": "text",
+          "skipTranslation": false,
+          "metadata": {
+            "alternatePhrasings": []
+          }
+        }
+      ],
+      "modalities": {},
+      "metadata": {
+        "stateModifications": [
+          {
+            "type": "context",
+            "name": "customerId",
+            "modification": "clear"
+          }
+        ],
+        "name": "",
+        "choice": {
+          "showChoices": false,
+          "choiceDisplayFormat": "dropdown",
+          "associatedSlotIds": [],
+          "idField": "",
+          "labelField": "",
+          "source": "slot",
+          "slotId": "CustomerID",
+          "selectedChoiceLabel": "CustomerID"
+        }
+      },
+      "canvasMetadata": {
+        "x": -1133.333333333333,
+        "y": -546.1666666666666,
+        "width": 240,
+        "height": 292,
+        "isMinimized": false
+      }
+    },
+    "d85bfca1-0ade-466b-a910-4b649e167308": {
+      "nodeId": "d85bfca1-0ade-466b-a910-4b649e167308",
+      "childNodes": [
+        {
+          "nodeId": "ecaccd32-7a0a-4268-92de-3acb302e3697",
+          "name": "",
+          "conditions": [
+            {
+              "operator": "contains",
+              "left": {
+                "type": "context",
+                "name": "customerId"
+              },
+              "right": {
+                "type": "constant",
+                "value": "CUST"
+              }
+            }
+          ]
+        },
+        {
+          "nodeId": "8dc3bf77-45d2-444f-9ed8-38bb3e2919d8",
+          "name": "",
+          "conditions": []
+        }
+      ],
+      "type": "split",
+      "messages": [],
+      "modalities": {},
+      "metadata": {
+        "stateModifications": [],
+        "name": "",
+        "split": {
+          "modelType": "anthropic.claude-sonnet-5"
+        }
+      },
+      "canvasMetadata": {
+        "x": -1133.333333333333,
+        "y": -854.1666666666666,
+        "width": 240,
+        "height": 127,
+        "isMinimized": false
+      }
+    },
+    "ecaccd32-7a0a-4268-92de-3acb302e3697": {
+      "nodeId": "ecaccd32-7a0a-4268-92de-3acb302e3697",
+      "childNodes": [
+        {
+          "name": "",
+          "conditions": [
+            {
+              "left": {
+                "type": "node_status"
+              },
+              "operator": "eq",
+              "right": {
+                "type": "constant",
+                "value": "continuation"
+              }
+            }
+          ]
+        }
+      ],
+      "type": "redirect",
+      "messages": [],
+      "modalities": {},
+      "metadata": {
+        "stateModifications": [],
+        "name": "",
+        "redirect": {
+          "id": "SampleMainLiveSyncInsJp",
+          "intentId": "SampleMainLiveSyncInsJp",
+          "type": "intent"
+        }
+      },
+      "canvasMetadata": {
+        "x": -46.58314917802079,
+        "y": -834.1666666666666,
+        "width": 240,
+        "height": 133,
+        "isMinimized": false
+      }
+    }
+  },
+  "aiDescription": "",
+  "untrained": true,
+  "slots": [
+    {
+      "name": "CustomerID",
+      "type": "customerId",
+      "examples": [],
+      "sensitive": false,
+      "aiDescription": ""
+    }
+  ],
+  "type": "multilingual",
+  "masterLanguageCode": "ja-JP",
+  "languageCodes": [
+    "ja-JP"
+  ],
+  "mirroring": "none"
+}

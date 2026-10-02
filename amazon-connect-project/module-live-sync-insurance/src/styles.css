@@ -1,0 +1,152 @@
+/*
+ * Tailwind CSS v4 entrypoint for the app shell.
+ *
+ * Touchpoint renders inside a closed shadow root and the published package ships
+ * its own compiled Tailwind build, so no selector here — preflight included — can
+ * reach its internals, and nothing here has to generate its utilities.
+ *
+ * Two things do still cross the boundary, and both are handled deliberately
+ * below: inherited properties set on `body` (the widget's host element is a
+ * sibling of `#root`), and custom properties set on `:root`. The widget writes
+ * every theme property inline on its own element, so a token name it shares with
+ * this file — `--color-accent`, `--font-sans` — resolves to its value, not ours.
+ *
+ * Almost all styling is utilities in the markup. What lives here is the three
+ * things utilities can't express: the design tokens (`@theme`), the element
+ * defaults every screen relies on (`@layer base`), and the handful of primitives
+ * that would otherwise be copied verbatim a dozen times (`@layer components`).
+ */
+
+@import "tailwindcss";
+
+/* Design tokens ----------------------------------------------------------- */
+
+@theme {
+  --color-ink: #10151c;
+  --color-ink-soft: #5b6673;
+  --color-line: #e2e6eb;
+  --color-line-strong: #cdd4dd;
+  --color-surface: #ffffff;
+  --color-canvas: #f4f6f8;
+
+  /* Keep --color-accent in sync with `theme.accent` in src/touchpoint.ts so
+     the widget and the page read as one product. */
+  --color-accent: #1c63da;
+  --color-accent-hover: #1750b5;
+  --color-accent-soft: #eef4fd;
+  --color-accent-ink: #ffffff;
+
+  --color-danger: #b42318;
+  --color-danger-line: #f3c7c2;
+  --color-danger-soft: #fdf3f2;
+
+  --color-ok: #17603a;
+  --color-ok-soft: #e7f5ec;
+
+  /* Unchanged from the pre-Tailwind stylesheet: `body` inherits into the widget. */
+  --font-sans:
+    "Amazon Ember", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+
+  --radius-panel: 0.875rem;
+}
+
+/* Element defaults -------------------------------------------------------- */
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  html {
+    /*
+     * Anchored fields don't end up flush against the top of the viewport.
+     * `scroll-padding` is not an inherited property, so it stops here.
+     */
+    scroll-padding-top: 1.5rem;
+  }
+
+  /*
+   * Touchpoint's host element is a sibling of `#root` under `<body>`, so
+   * anything inherited from here reaches inside the widget. These four are the
+   * same values the pre-Tailwind stylesheet set, and the widget overrides all of
+   * them for its own subtree anyway (`--font-family` inline, plus a
+   * `font-family: … !important` rule). Nothing else inheritable goes on `body`:
+   * page-only niceties live on the app wrapper in `main.tsx` instead.
+   */
+  body {
+    @apply min-h-dvh bg-canvas font-sans text-base text-ink;
+  }
+
+  /*
+   * Every interactive element gets the same, always-visible focus treatment —
+   * scoped to `#root`, because a bare `:focus-visible` would also match the
+   * Touchpoint host element and ring the whole widget.
+   */
+  #root :focus-visible {
+    @apply outline-2 outline-offset-2 outline-accent;
+  }
+
+  code {
+    @apply rounded bg-canvas px-1 py-px font-mono text-[0.9em] text-ink;
+  }
+}
+
+/* The handful of primitives that repeat across every screen ---------------- */
+
+@layer components {
+  /*
+   * Anything that goes somewhere is an `<a href>`; anything that does something
+   * is a `<button>`. `.btn` is shared by both, so it resets text-decoration and
+   * uses inline-flex to centre its label either way. `min-h-11` keeps it at the
+   * 44px minimum touch target on phones.
+   */
+  .btn {
+    @apply inline-flex min-h-11 cursor-pointer items-center justify-center gap-2
+      rounded-lg border px-4 py-2.5 text-center text-[0.9375rem] font-semibold
+      no-underline transition-colors duration-150 select-none
+      disabled:cursor-default disabled:opacity-60;
+  }
+
+  .btn-primary {
+    @apply border-accent bg-accent text-accent-ink hover:border-accent-hover
+      hover:bg-accent-hover disabled:hover:border-accent disabled:hover:bg-accent;
+  }
+
+  .btn-quiet {
+    @apply border-line bg-surface text-ink hover:border-line-strong
+      hover:bg-canvas;
+  }
+
+  /* Text inputs and textareas. `text-base` (16px) stops iOS Safari zooming in
+     on focus; `aria-invalid` does the error styling so it can never disagree
+     with what assistive tech is told. */
+  .input {
+    @apply min-h-11 w-full rounded-lg border border-line bg-surface px-3 py-2.5
+      text-base text-ink shadow-xs transition-colors duration-150
+      placeholder:text-ink-soft/70 hover:border-line-strong
+      focus-visible:border-accent
+      aria-[invalid=true]:border-danger aria-[invalid=true]:bg-danger-soft/60;
+  }
+
+  .field-label {
+    @apply block text-[0.9375rem] font-semibold text-ink;
+  }
+
+  .field-hint {
+    @apply text-[0.8125rem] text-ink-soft;
+  }
+
+  .field-error {
+    @apply flex items-start gap-1.5 text-[0.8125rem] font-medium text-danger;
+  }
+
+  /* Definition-list facts: a small uppercase term over a bold value. */
+  .facts dt {
+    @apply text-[0.6875rem] font-semibold tracking-wide text-ink-soft uppercase;
+  }
+
+  .facts dd {
+    @apply mt-0.5 text-[0.9375rem] font-semibold text-ink;
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "_comment": "このファイルをコピーして acxd_config.json を作成し、値を入れてください。ローカル開発（npm run dev）も本番（S3）も、この acxd_config.json が唯一の設定源です。実キーはクライアントに露出する前提の値です。エンドポイント側のスコープ制限・WAF などで保護してください。",
+  "connectInstanceId": "",
+  "connectContactFlowId": "",
+  "connectRegion": "ap-northeast-1",
+  "connectVoiceEndpoint": "",
+  "liveSyncDeploymentKey": "",
+  "liveSyncApiKey": "",
+  "customerId": "CUST-001",
+  "customerName": "AWS 太郎",
+  "customerOtherInfo": ""
+}

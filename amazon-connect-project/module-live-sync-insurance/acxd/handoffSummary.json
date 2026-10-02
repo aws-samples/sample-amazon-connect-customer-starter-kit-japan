@@ -1,0 +1,13 @@
+{
+  "key": "handoffSummary",
+  "schema": {
+    "type": "string",
+    "isSensitive": false,
+    "title": "",
+    "description": "引き継ぎを受ける担当者向けの短いメモ。Agent handoff summary ノードが会話のトランスクリプトから作成する。そのノードは flow-local に書き込むが、これはフローの外には出ない。Escalate ノードでの state modification によりこの Context Variable にコピーされ、これが Amazon Connect Customer への引き継ぎに用いられる。Part 4 で参加者が state modification を追加する構成のため、それまではこの変数は空である。"
+  },
+  "disallowExternalModification": true,
+  "tags": [],
+  "path": "",
+  "type": "text"
+}

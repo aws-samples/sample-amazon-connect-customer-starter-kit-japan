@@ -1,0 +1,13 @@
+{
+  "key": "customerName",
+  "schema": {
+    "type": "string",
+    "isSensitive": false,
+    "title": "",
+    "description": "Amazon Connect が既に把握しているお客様の氏名。Get customer input ブロックの前に設定された、まったく同じ名前の Connect の contact attribute から INBOUND で設定される。disallowExternalModification=false (「クライアント側の更新を許可」を ON) が必須であり、そうしないと Connect から書き込めない。"
+  },
+  "disallowExternalModification": false,
+  "tags": [],
+  "path": "",
+  "type": "text"
+}

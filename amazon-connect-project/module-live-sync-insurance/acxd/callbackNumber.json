@@ -1,0 +1,13 @@
+{
+  "key": "callbackNumber",
+  "schema": {
+    "type": "string",
+    "isSensitive": false,
+    "title": "",
+    "description": "このお客様の折り返し先として最適な番号。Amazon Connect Customer が contact attributes から inbound で設定するか、コンタクトに番号が付随しない場合はフロー内で組み込みの NLX.PhoneNumber スロットにより取得する。"
+  },
+  "disallowExternalModification": false,
+  "tags": [],
+  "path": "",
+  "type": "text"
+}

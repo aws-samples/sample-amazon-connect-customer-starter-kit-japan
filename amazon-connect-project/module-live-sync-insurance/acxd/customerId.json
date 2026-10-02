@@ -1,0 +1,13 @@
+{
+  "key": "customerId",
+  "schema": {
+    "type": "string",
+    "isSensitive": false,
+    "title": "",
+    "description": "CUST-000 の形式の顧客 ID。"
+  },
+  "disallowExternalModification": true,
+  "tags": [],
+  "path": "",
+  "type": "text"
+}

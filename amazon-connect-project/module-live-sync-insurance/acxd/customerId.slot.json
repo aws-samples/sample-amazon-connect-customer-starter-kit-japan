@@ -1,0 +1,55 @@
+{
+  "slotId": "customerId",
+  "description": "AnyCompany Insurance の有効なお客様識別子。列挙自体がバリデーションであり、大小文字も正規化するため、お客様が cust-001 と発話または入力しても CUST-001 に解決される。",
+  "sensitive": false,
+  "tags": [],
+  "values": [
+    {
+      "value": "CUST-001",
+      "valueId": "cust001IdVzQ0f0value01",
+      "synonyms": [],
+      "choicePayload": "",
+      "translated": false,
+      "skipTranslation": false
+    },
+    {
+      "value": "CUST-002",
+      "valueId": "cust002IdVzQ0f0value02",
+      "synonyms": [],
+      "choicePayload": "",
+      "translated": false,
+      "skipTranslation": false
+    },
+    {
+      "value": "CUST-003",
+      "valueId": "cust003IdVzQ0f0value03",
+      "synonyms": [],
+      "choicePayload": "",
+      "translated": false,
+      "skipTranslation": false
+    },
+    {
+      "value": "CUST-004",
+      "valueId": "cust004IdVzQ0f0value04",
+      "synonyms": [],
+      "choicePayload": "",
+      "translated": false,
+      "skipTranslation": false
+    },
+    {
+      "value": "CUST-005",
+      "valueId": "cust005IdVzQ0f0value05",
+      "synonyms": [],
+      "choicePayload": "",
+      "translated": false,
+      "skipTranslation": false
+    }
+  ],
+  "path": "",
+  "type": "multilingual",
+  "masterLanguageCode": "ja-JP",
+  "languageCodes": [
+    "ja-JP"
+  ],
+  "mirroring": "none"
+}
