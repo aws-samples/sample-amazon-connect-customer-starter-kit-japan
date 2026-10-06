@@ -113,7 +113,7 @@
 
 上から順に進み、手順を実施してください。
 
-1.  デプロイメントガイドをダウンロード:[**こちら**](docs/other_docs/AmazonConnectCustomerPackage_DeploymentGuide_20261002.pdf)
+1.  デプロイメントガイドをダウンロード:[**こちら**](docs/other_docs/AmazonConnectCustomerPackage_DeploymentGuide_20261006.pdf)
 1.  パラメーターシートをダウンロード:[**こちら**](docs/other_docs/AmazonConnectCustomerPackage_ParameterSheet.xlsx)
 1.  デプロイモジュールをダウンロード:[**こちら**](docs/other_docs/amazon-connect-project.zip)
 1.  デプロイメントガイドに従い作業を実施
