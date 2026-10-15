@@ -21,7 +21,7 @@ Amazon Connect **In-app** チャネル + **Agentic CX Designer（ACXD）の Live
 ```
 
 - **医療保険**（`MED-1001`）: 入院・手術・通院の給付を備え、請求可能。
-- **生命保険**（`LIFE-2001`）: 表示のみ（ハリボテ）。請求ボタンはグレーアウト。
+- **生命保険**（`LIFE-2001`）: 表示のみ。請求ボタンはグレーアウト。
 
 給付金請求フォームの 4 項目（`fill_claim_details` で反映）:
 
@@ -72,7 +72,7 @@ S3 配布も、この同じ JSON を編集するだけで動きます。ビル�
   "liveSyncApiKey": "同上 API key",
   "customerId": "CUST-001",
   "customerName": "AWS 太郎",
-  "customerOtherInfo": ""
+  "customerOtherInfo": "test@example.com"
 }
 ```
 
