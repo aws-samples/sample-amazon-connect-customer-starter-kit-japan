@@ -4,7 +4,7 @@
 ※ us-east-1/ap-northeast-1 の両方でデプロイ可能です。
 
 ## バージョン情報
-**v2.0.8** (2026年10月)
+**v2.0.9** (2026年10月)
 
 ## 更新情報
 2026年10月
@@ -13,6 +13,7 @@
   - 会話に合わせて顧客の Web 画面をリアルタイムに連動する Live Sync のサンプルをパッケージに反映
   - オペレータとセルフサービス用の評価フォーム設定の手順を簡素化（自動化）
   - 手順書に Agentic CX designer および Live Sync に関するポイント解説を追加
+  - Live Sync 用のサンプルコンタクトフローにエスカレーション時における会話のタイトル/要約のケース連携を追加
 
 2026年6月
 - 更新内容
@@ -113,7 +114,7 @@
 
 上から順に進み、手順を実施してください。
 
-1.  デプロイメントガイドをダウンロード:[**こちら**](docs/other_docs/AmazonConnectCustomerPackage_DeploymentGuide_20261006.pdf)
+1.  デプロイメントガイドをダウンロード:[**こちら**](docs/other_docs/AmazonConnectCustomerPackage_DeploymentGuide_20261015.pdf)
 1.  パラメーターシートをダウンロード:[**こちら**](docs/other_docs/AmazonConnectCustomerPackage_ParameterSheet.xlsx)
 1.  デプロイモジュールをダウンロード:[**こちら**](docs/other_docs/amazon-connect-project.zip)
 1.  デプロイメントガイドに従い作業を実施
