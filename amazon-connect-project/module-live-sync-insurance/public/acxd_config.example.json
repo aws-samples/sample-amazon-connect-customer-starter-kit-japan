@@ -8,5 +8,5 @@
   "liveSyncApiKey": "",
   "customerId": "CUST-001",
   "customerName": "AWS 太郎",
-  "customerOtherInfo": ""
+  "customerOtherInfo": "test@example.com"
 }
