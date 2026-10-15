@@ -66,6 +66,15 @@ const buildTouchpointConfiguration = (
     contactAttributes: buildContactAttributes(config),
   },
 
+  // Live Sync の voice-plus チャネルは channelKey=connect-${languageCode} で接続する。
+  // languageCode 未指定だと SDK は navigator.language（ブラウザの Accept-Language 先頭
+  // トークン）へフォールバックし、ブラウザが "ja"（地域なし）を送る環境では
+  // channelKey=connect-ja となる。ACXD サーバーが受け付けるのは connect-ja-JP のみ
+  // なので一致せず、voice-plus WebSocket が確立できず画面連動（遷移・項目反映）が
+  // 動かない（音声・会話自体は WebRTC 側で成立するため気づきにくい）。
+  // ブラウザ言語に依存しないよう ja-JP に固定する。このデモは日本語専用。
+  languageCode: "ja-JP",
+
   // Live Sync: 公開済み ACXD アプリの 2 つのキー。これがアシスタントにページを
   // 見せ・操作させる。
   liveSync: {
