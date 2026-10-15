@@ -184,7 +184,7 @@
           "temperature": 0.7,
           "scopeTagColors": {},
           "scopeTags": [],
-          "modelType": "anthropic.claude-haiku-4-5"
+          "modelType": "anthropic.claude-sonnet-5"
         }
       },
       "canvasMetadata": {
@@ -193,6 +193,81 @@
         "width": 240,
         "height": 377,
         "isMinimized": false
+      }
+    },
+    "3a85046a-fa8f-49ea-aa63-18c9387889e1": {
+      "nodeId": "3a85046a-fa8f-49ea-aa63-18c9387889e1",
+      "childNodes": [
+        {
+          "nodeId": "e2e6650b-af68-481d-8d1b-3b742f66f67d",
+          "name": "",
+          "conditions": [
+            {
+              "left": {
+                "type": "node_status"
+              },
+              "operator": "eq",
+              "right": {
+                "type": "constant",
+                "value": "success"
+              }
+            }
+          ]
+        },
+        {
+          "nodeId": "e2e6650b-af68-481d-8d1b-3b742f66f67d",
+          "name": "",
+          "conditions": [
+            {
+              "left": {
+                "type": "node_status"
+              },
+              "operator": "eq",
+              "right": {
+                "type": "constant",
+                "value": "timeout"
+              }
+            }
+          ]
+        },
+        {
+          "nodeId": "e2e6650b-af68-481d-8d1b-3b742f66f67d",
+          "name": "",
+          "conditions": [
+            {
+              "left": {
+                "type": "node_status"
+              },
+              "operator": "eq",
+              "right": {
+                "type": "constant",
+                "value": "failure"
+              }
+            }
+          ]
+        }
+      ],
+      "type": "generative_text",
+      "messages": [],
+      "modalities": {},
+      "metadata": {
+        "stateModifications": [],
+        "name": "Agent handoff Conversation title",
+        "generativeText": {
+          "modelType": "anthropic.claude-sonnet-5",
+          "name": "handoffConversationTitle",
+          "prompt": "# エスカレーション引き継ぎと併用する会話のタイトル生成プロンプト（日本語 / Agent handoff Conversation Title\n\n---\nTASK\nこの通話の内容が一目で分かる、短い会話タイトルを日本語で 1 つ書いてください。あとから一覧で見返したときに、何の問い合わせだったかがすぐ分かるようにするためのものです。\n\n---\nCONTEXT (これまでの会話)\n{System.transcript:NLX.System}\n\n---\nRULES\n- 出力は 1 つのタイトルだけ。必ず 1 文（または短い語句）で、全体で 30 文字程度までにすること。長い文章にしないこと。\n- 文末に句点（。）を付けないこと。あいさつ・説明・前置きを入れないこと。\n- 何についての問い合わせかが分かる内容にすること。可能なら「対象（契約・請求など）＋用件」の形にすること。\n- 上の会話に実際に出てきたことだけを書くこと。契約・請求・金額・日付を勝手に作らないこと。\n- 補償の有無を書いたり示唆したりしないこと。請求の結果を予測しないこと。\n- 出力は必ず日本語で書くこと。英語で書かないこと。\n- 重要な書式ルール: 平文のみで書くこと。答えの中で '&' や '=' の文字を使わないこと（'&' の代わりに「および」などの言葉を使う）。箇条書き・改行・マークダウン・引用符を使わないこと。このテキストは key=value のペイロードとして Amazon Connect に渡されるため、それらの文字は途中で切れてしまいます。\n- 英数字の前後には半角スペースを入れること（例: 「Amazon Connect の」）。\n\n---\nOUTPUT\n会話タイトルのみを日本語で出力すること。解説や理由づけは不要。",
+          "maxTokens": 4000,
+          "temperature": 0.3
+        }
+      },
+      "canvasMetadata": {
+        "x": 269.1709720372842,
+        "y": 509.6853084775854,
+        "width": 240,
+        "height": 167,
+        "isMinimized": false,
+        "color": "orange"
       }
     },
     "7ca361b2-b134-4dc4-848d-b9b282a24a4a": {
@@ -273,7 +348,7 @@
       "nodeId": "da428c69-7539-4454-ad9f-30b634e47da2",
       "childNodes": [
         {
-          "nodeId": "e2e6650b-af68-481d-8d1b-3b742f66f67d",
+          "nodeId": "3a85046a-fa8f-49ea-aa63-18c9387889e1",
           "name": "",
           "conditions": [
             {
@@ -289,7 +364,7 @@
           ]
         },
         {
-          "nodeId": "e2e6650b-af68-481d-8d1b-3b742f66f67d",
+          "nodeId": "3a85046a-fa8f-49ea-aa63-18c9387889e1",
           "name": "",
           "conditions": [
             {
@@ -305,7 +380,7 @@
           ]
         },
         {
-          "nodeId": "e2e6650b-af68-481d-8d1b-3b742f66f67d",
+          "nodeId": "3a85046a-fa8f-49ea-aa63-18c9387889e1",
           "name": "",
           "conditions": [
             {
@@ -330,7 +405,7 @@
         "generativeText": {
           "modelType": "anthropic.claude-sonnet-5",
           "name": "handoffSummary",
-          "prompt": "# エスカレーション引き継ぎメモ生成プロンプト（日本語 / Agent handoff summary）\n\n\n> ACXD の「Agent handoff summary」（Generative text）ノードに貼り付けるプロンプトです。\n> 出力変数は `handoffSummary`。この要約は key=value のペイロードとして Amazon Connect に\n> 渡されるため、`&` `=` や改行・記号を含めてはいけません。\n>\n> 注意:\n> - `{System.transcript:NLX.System}` は変数参照です。**そのまま（英語表記のまま）** 残すこと。翻訳・改変しない。\n> - 変更後は ACXD で **Build → Deploy** を実行すること。\n>\n> 元の英語プロンプトからの変更点: 出力言語を日本語に明示（TASK / RULES / OUTPUT）。\n> フォーマット制約（`&`・`=`・改行・箇条書きを使わない）は維持し、`&` の代替を日本語表現にした。\n\n---\nTASK\nこの通話をこれから引き継ぐ専門担当者向けに、短い引き継ぎメモを日本語で書いてください。お客様が同じ説明を繰り返さなくて済むようにするためのものです。\n\n---\nCONTEXT (これまでの会話)\n{System.transcript}\n\n---\nRULES\n- 読み手はお客様ではなく専門担当者です。三人称で書き、あいさつや署名は入れないこと。\n- 最大 2〜3 文。何のための連絡か、すでに対応済みのこと、まだ必要なことを含めること。\n- 上の会話に実際に出てきたことだけを書くこと。契約・請求・金額・日付を勝手に作らないこと。\n- 補償の有無を書いたり示唆したりしないこと。請求の結果を予測しないこと。\n- 出力は必ず日本語で書くこと。英語で書かないこと。\n- 重要な書式ルール: 平文のみで書くこと。答えの中で '&' や '=' の文字を使わないこと（'&' の代わりに「および」などの言葉を使う）。箇条書き・改行・マークダウン・引用符を使わないこと。このテキストは key=value のペイロードとして Amazon Connect に渡されるため、それらの文字は途中で切れてしまいます。\n- 英数字の前後には半角スペースを入れること（例: 「Amazon Connect の」）。\n---\nOUTPUT\n引き継ぎメモのみを日本語で出力すること。解説や理由づけは不要。",
+          "prompt": "# エスカレーション引き継ぎメモ生成プロンプト（日本語 / Agent handoff summary）\n\n---\nTASK\nこの通話をこれから引き継ぐ専門担当者向けに、短い引き継ぎメモを日本語で書いてください。お客様が同じ説明を繰り返さなくて済むようにするためのものです。\n\n---\nCONTEXT (これまでの会話)\n{System.transcript:NLX.System}\n\n---\nRULES\n- 読み手はお客様ではなく専門担当者です。三人称で書き、あいさつや署名は入れないこと。\n- 最大 2〜3 文。何のための連絡か、すでに対応済みのこと、まだ必要なことを含めること。\n- 上の会話に実際に出てきたことだけを書くこと。契約・請求・金額・日付を勝手に作らないこと。\n- 補償の有無を書いたり示唆したりしないこと。請求の結果を予測しないこと。\n- 出力は必ず日本語で書くこと。英語で書かないこと。\n- 重要な書式ルール: 平文のみで書くこと。答えの中で '&' や '=' の文字を使わないこと（'&' の代わりに「および」などの言葉を使う）。箇条書き・改行・マークダウン・引用符を使わないこと。このテキストは key=value のペイロードとして Amazon Connect に渡されるため、それらの文字は途中で切れてしまいます。\n- 英数字の前後には半角スペースを入れること（例: 「Amazon Connect の」）。\n---\nOUTPUT\n引き継ぎメモのみを日本語で出力すること。解説や理由づけは不要。",
           "maxTokens": 4000,
           "temperature": 0.3
         }
@@ -386,15 +461,24 @@
               "type": "constant",
               "value": "{handoffSummary:NLX.Local}"
             }
+          },
+          {
+            "type": "context",
+            "name": "handoffConversationTitle",
+            "modification": "set",
+            "value": {
+              "type": "constant",
+              "value": "{handoffConversationTitle:NLX.Local}"
+            }
           }
         ],
         "name": ""
       },
       "canvasMetadata": {
-        "x": 622.4778006737833,
-        "y": 347.5487595410126,
+        "x": 615.2784518181938,
+        "y": 346.1088897698947,
         "width": 240,
-        "height": 247,
+        "height": 269,
         "isMinimized": false
       }
     },
