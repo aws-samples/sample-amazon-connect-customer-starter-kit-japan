@@ -38,7 +38,7 @@ export const startClaimAction = (
 ): LiveSyncCustomAction => ({
   action: "start_claim",
   description:
-    "Open the benefit claim flow — move from the member home page to the list of policies. Call this when the customer wants to file a benefit claim (給付金の請求). 顧客が給付金請求を希望したら、契約一覧へ進める。",
+    "給付金請求のフローを開始する。会員のマイページ（トップ）から契約一覧の画面へ進める。顧客が給付金の請求を希望したときに呼ぶこと。",
   schema: { type: "object", properties: {} },
   handler: () => {
     startClaim();
@@ -56,13 +56,13 @@ export const selectPolicyAction = (
 ): LiveSyncCustomAction => ({
   action: "select_policy",
   description:
-    "Choose which policy the benefit claim is being filed against. Use this once the customer identifies the policy or product involved. The customer will usually refer to the product by name (例:「医療保険」「入院の保険」), NOT by policy ID — map their words to the matching policyId from the enum below and call this immediately. 顧客は証券番号ではなく商品名（「医療保険」など）で言うことが多い。その言葉を下記の policyId に対応づけてすぐ呼ぶこと。",
+    "どの契約に対して給付金を請求するかを選ぶ。顧客が対象の契約・商品を特定できたら呼ぶこと。顧客は証券番号ではなく商品名（例:「医療保険」「入院の保険」）で言うことが多い。その言葉を下記 enum の policyId に対応づけ、特定できた時点でただちに呼ぶこと。",
   schema: {
     type: "object",
     properties: {
       policyId: {
         type: "string",
-        description: `The policy ID to file against. Match the customer's spoken product name to one of these. Available policies: ${policies
+        description: `請求対象の契約 ID。顧客が話した商品名を次のいずれかに対応づけること。選択可能な契約: ${policies
           .map(describePolicy)
           .join("; ")}`,
         enum: policies.map((policy) => policy.policyId),
@@ -89,31 +89,31 @@ export const fillClaimAction = (
 ): LiveSyncCustomAction => ({
   action: "fill_claim_details",
   description:
-    "Write what the customer has told you into the benefit claim form. Call this the moment you have any single value — do not wait for the rest, and do not hold a value back to send with the next one. One field per call is normal; call again for each new piece, and again to correct one the customer restates. The customer is watching the form fill in as they talk, so a late call reads as not having been heard. 顧客が話した値を給付金請求フォームに反映する。値が 1 つ分かった時点で都度呼ぶ。",
+    "顧客が話した内容を給付金請求フォームに書き込む。値が 1 つでも分かった瞬間に呼ぶこと。残りがそろうのを待たず、次の値とまとめて送ろうとせず、分かった値だけをその都度送る。1 回の呼び出しで 1 項目が基本で、新しい情報が出るたびに呼び、顧客が言い直したら訂正のために再度呼ぶ。顧客は話しながらフォームが埋まっていく様子を見ているため、呼び出しが遅れると「聞いてもらえていない」と受け取られる。",
   schema: {
     type: "object",
     properties: {
       claimType: {
         type: "string",
         description:
-          "The kind of benefit being claimed (入院給付金 / 手術給付金 / 通院給付金). Send as soon as what happened makes it clear, without asking the customer to pick from these.",
+          "請求する給付の種類（入院給付金 / 手術給付金 / 通院給付金）。何が起きたかで種類が判断できた時点で送ること。顧客にこの中から選ばせる必要はない。",
         enum: availableClaimTypes(policy).map((type) => type.value),
       },
       incidentDate: {
         type: "string",
         description:
-          "The date of the hospitalization, surgery, or outpatient visit, as YYYY-MM-DD. Resolve relative dates such as '先週の火曜日' before sending. Send on its own as soon as it is known.",
+          "入院・手術・通院があった日付。YYYY-MM-DD 形式。「先週の火曜日」のような相対的な表現は具体的な日付に変換してから送ること。分かった時点でこの項目だけで送ってよい。",
       },
       amount: {
         type: "number",
         description:
-          "The customer's estimate of the claim amount, in Japanese yen (JPY). A rough figure counts — send it on its own as soon as they give one.",
+          "顧客が見積もる請求金額（日本円 / JPY）。おおよその金額でよい。金額が出た時点でこの項目だけで送ること。",
         exclusiveMinimum: 0,
       },
       description: {
         type: "string",
         description:
-          "A short account of what happened, in the customer's own words (Japanese is fine). Send it as soon as they have described the situation, before you have the other fields.",
+          "何が起きたかの簡単な説明。顧客自身の言葉（日本語でよい）。状況を話してくれた時点で、他の項目がそろう前でも送ること。",
       },
     },
   },
@@ -141,7 +141,7 @@ export const submitClaimAction = (
 ): LiveSyncCustomAction => ({
   action: "submit_claim",
   description:
-    "Submit the benefit claim. Only do this after reading the details back to the customer and getting their confirmation. 確認を取ってから呼ぶこと。",
+    "給付金請求を確定（送信）する。入力内容を顧客に読み上げて確認を取ってからのみ呼ぶこと。",
   schema: { type: "object", properties: {} },
   handler: () => {
     submit();
@@ -154,7 +154,7 @@ export const changePolicyAction = (
 ): LiveSyncCustomAction => ({
   action: "change_policy",
   description:
-    "Go back to the list of policies, for when the customer picked the wrong one. 契約を選び直すとき。",
+    "契約一覧の画面に戻る。顧客が誤った契約を選んでしまい、選び直したいときに呼ぶこと。",
   schema: { type: "object", properties: {} },
   handler: () => {
     changePolicy();
@@ -166,7 +166,7 @@ export const startOverAction = (
   startOver: () => void,
 ): LiveSyncCustomAction => ({
   action: "file_another_claim",
-  description: "Start a new benefit claim from the policy list. 新しい請求を始める。",
+  description: "契約一覧の画面から、新しい給付金請求を始める。",
   schema: { type: "object", properties: {} },
   handler: () => {
     startOver();
