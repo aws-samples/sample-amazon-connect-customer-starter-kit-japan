@@ -629,6 +629,10 @@ Outputs:
     Description: 'Domain name of CloudFront distribution'
     Value: !GetAtt CloudFrontDistribution.DomainName
 
+  LiveSyncURL:
+    Description: 'URL of the Live Sync insurance page'
+    Value: !Sub 'https://${CloudFrontDistribution.DomainName}/live-sync-insurance/index.html'
+
   ApplicationId:
     Description: 'The identifier of the created application'
     Value: !Ref ConnectApplication

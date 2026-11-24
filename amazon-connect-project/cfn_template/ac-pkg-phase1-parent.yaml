@@ -15,6 +15,12 @@ Metadata:
           default: "Amazon Connect AI agents Configuration"
         Parameters:
           - EnableAmazonConnectAIagents
+      - Label:
+          default: "Package Auto Copy (GitHub to -app bucket)"
+        Parameters:
+          - EnablePackageAutoCopy
+          - PackageGitHubRepository
+          - PackageGitRef
     ParameterLabels:
       EnableAmazonConnectAIagents:
         default: "Enable Amazon Connect AI agents"
@@ -55,6 +61,28 @@ Parameters:
       - 'No'
     Default: 'Yes'
     Description: 'Claim a phone number on a new Amazon Connect instance. If no, manually claim it in the Admin console.'
+
+  EnablePackageAutoCopy:
+    Type: String
+    AllowedValues:
+      - 'Yes'
+      - 'No'
+    Default: 'Yes'
+    Description: 'Copy the amazon-connect-project folder from GitHub into the -app S3 bucket during stack creation. If No, upload it manually as before.'
+
+  PackageGitHubRepository:
+    Type: String
+    Default: 'aws-samples/sample-amazon-connect-customer-starter-kit-japan'
+    AllowedPattern: '^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$'
+    ConstraintDescription: 'Use the form owner/repository.'
+    Description: 'GitHub repository (owner/repository) that contains the amazon-connect-project folder.'
+
+  PackageGitRef:
+    Type: String
+    Default: 'main'
+    AllowedPattern: '^[A-Za-z0-9_.-]+$'
+    ConstraintDescription: 'Use a branch name, tag name or commit SHA (no slash).'
+    Description: 'Branch, tag or commit SHA to copy from. Pinning a tag or commit SHA is recommended.'
   
 Rules:
   ValidateInstanceAlias:
@@ -87,6 +115,13 @@ Conditions:
   CreateAssistantResources: !Equals 
     - !Ref EnableAmazonConnectAIagents
     - 'Yes'
+  ShouldCopyPackage: !Equals
+    - !Ref EnablePackageAutoCopy
+    - 'Yes'
+  ShouldCopySampleKnowledge:
+    !And
+      - !Condition ShouldCopyPackage
+      - !Condition CreateAssistantResources
 
 Resources:
 
@@ -526,6 +561,153 @@ Resources:
       AssociationType: KNOWLEDGE_BASE
       Association:
         KnowledgeBaseId: !Ref KnowledgeBase
+
+  # ========================================
+  # 9. Package Auto Copy (GitHub -> -app バケット)
+  #    amazon-connect-project フォルダを -app バケットへ自動コピーする。
+  #    Phase3 の TemplateURL が参照する S3 パスを手動アップロードなしで用意する。
+  # ========================================
+  PackageCopyRole:
+    Type: AWS::IAM::Role
+    Condition: ShouldCopyPackage
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: PackageCopyToAppBucket
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:DeleteObject
+                  - s3:DeleteObjectVersion
+                Resource: !Sub '${ConnectS3BucketApp.Arn}/amazon-connect-project/*'
+              - Effect: Allow
+                Action:
+                  - s3:ListBucket
+                  - s3:ListBucketVersions
+                Resource: !GetAtt ConnectS3BucketApp.Arn
+              - Effect: Allow
+                Action: s3:GetObject
+                Resource: !Sub '${ConnectS3BucketApp.Arn}/amazon-connect-project/sample_knowledge/*'
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:DeleteObject
+                  - s3:DeleteObjectVersion
+                Resource: !Sub 'arn:aws:s3:::amazonconnect-${InstanceAlias}-aiagents/sample_knowledge/*'
+              - Effect: Allow
+                Action:
+                  - s3:ListBucket
+                  - s3:ListBucketVersions
+                Resource: !Sub 'arn:aws:s3:::amazonconnect-${InstanceAlias}-aiagents'
+
+  PackageCopyFunction:
+    Type: AWS::Lambda::Function
+    Condition: ShouldCopyPackage
+    Properties:
+      Description: 'Copies amazon-connect-project from GitHub into the -app S3 bucket'
+      Runtime: python3.12
+      Handler: index.handler
+      Role: !GetAtt PackageCopyRole.Arn
+      Timeout: 900
+      MemorySize: 1024
+      Code:
+        ZipFile: |
+          import boto3, io, mimetypes, urllib.request, zipfile
+          import cfnresponse
+          s3 = boto3.client('s3')
+          P = 'amazon-connect-project/'
+          def copy(b, repo, ref):
+              u = 'https://codeload.github.com/%s/zip/%s' % (repo, ref)
+              rq = urllib.request.Request(u, headers={'User-Agent': 'cfn-package-copy'})
+              z = zipfile.ZipFile(io.BytesIO(urllib.request.urlopen(rq, timeout=120).read()))
+              n = 0
+              for i in z.infolist():
+                  if i.is_dir():
+                      continue
+                  k = i.filename.split('/', 1)[-1]
+                  if not k.startswith(P) or '..' in k.split('/'):
+                      continue
+                  s3.put_object(Bucket=b, Key=k, Body=z.read(i),
+                                ContentType=mimetypes.guess_type(k)[0] or 'binary/octet-stream')
+                  n += 1
+              if n == 0:
+                  raise Exception('%s not found in %s@%s' % (P, repo, ref))
+              return n
+          def s3copy(src, dst, sp, dp):
+              n = 0
+              for pg in s3.get_paginator('list_objects_v2').paginate(Bucket=src, Prefix=sp):
+                  for o in pg.get('Contents', []):
+                      if o['Key'].endswith('/'):
+                          continue
+                      s3.copy_object(Bucket=dst, Key=dp + o['Key'][len(sp):],
+                                     CopySource={'Bucket': src, 'Key': o['Key']})
+                      n += 1
+              if n == 0:
+                  raise Exception('no objects under s3://%s/%s' % (src, sp))
+              return n
+          def clean(b, pre=P):
+              for pg in s3.get_paginator('list_object_versions').paginate(Bucket=b, Prefix=pre):
+                  o = [{'Key': v['Key'], 'VersionId': v['VersionId']}
+                       for v in pg.get('Versions', []) + pg.get('DeleteMarkers', [])]
+                  for j in range(0, len(o), 1000):
+                      s3.delete_objects(Bucket=b, Delete={'Objects': o[j:j + 1000], 'Quiet': True})
+          def handler(e, c):
+              p = e['ResourceProperties']
+              b = p['Bucket']
+              st, d, why = 'SUCCESS', {}, None
+              try:
+                  if 'SourceBucket' in p:
+                      if e['RequestType'] == 'Delete':
+                          clean(b, p['TargetPrefix'])
+                      else:
+                          d['FileCount'] = s3copy(p['SourceBucket'], b, p['SourcePrefix'], p['TargetPrefix'])
+                  elif e['RequestType'] == 'Delete':
+                      clean(b)
+                  else:
+                      d['FileCount'] = copy(b, p['Repository'], p['Ref'])
+              except Exception as x:
+                  print(repr(x))
+                  if e['RequestType'] != 'Delete':
+                      st, why = 'FAILED', str(x)[:500]
+              cfnresponse.send(e, c, st, d, 'package-copy-' + b, reason=why)
+
+  PackageCopy:
+    Type: Custom::PackageCopy
+    Condition: ShouldCopyPackage
+    DependsOn:
+      - ConnectS3BucketAppPolicy
+      - PackageCopyRole
+    Properties:
+      ServiceToken: !GetAtt PackageCopyFunction.Arn
+      Bucket: !Ref ConnectS3BucketApp
+      Repository: !Ref PackageGitHubRepository
+      Ref: !Ref PackageGitRef
+
+  # -app バケットにコピー済みの sample_knowledge を -aiagents バケットへコピーする
+  SampleKnowledgeCopy:
+    Type: Custom::SampleKnowledgeCopy
+    Condition: ShouldCopySampleKnowledge
+    DependsOn:
+      - PackageCopy
+      - ConnectS3BucketAIagents
+      - BucketPolicy
+    Properties:
+      ServiceToken: !GetAtt PackageCopyFunction.Arn
+      SourceBucket: !Ref ConnectS3BucketApp
+      SourcePrefix: 'amazon-connect-project/sample_knowledge/'
+      Bucket: !Ref ConnectS3BucketAIagents
+      TargetPrefix: 'sample_knowledge/'
 
 Outputs:
   ConnectInstanceArn:
