@@ -4,9 +4,15 @@
 ※ us-east-1/ap-northeast-1 の両方でデプロイ可能です。
 
 ## バージョン情報
-**v2.1.0** (2026年10月)
+**v2.2.0** (2026年11月)
 
 ## 更新情報
+2026年11月
+- 更新内容
+  - ac-pkg-phase1-parent.yaml を更新し、amazon-connect-project と sample_knowledge フォルダを 本 git から最新のファイルをコピーする内容に変更（手順の簡素化）
+  - ac-pkg-phase3-app-stack.yaml を更新し、Live Sync 動作確認用のサンプル Web ページの URL を Output に追加（手順の簡素化）
+  - Agentic cx designer の作業手順に、プロンプト変更とガードレールに関する動作確認を追加
+
 2026年10月
 - 更新内容
   - AI を活用したセルフサービスをノーコードでデプロイする Agentic CX designer を用いたセルフサービスのサンプルをパッケージに反映
@@ -114,7 +120,7 @@
 
 上から順に進み、手順を実施してください。
 
-1.  デプロイメントガイドをダウンロード:[**こちら**](docs/other_docs/AmazonConnectCustomerPackage_DeploymentGuide_20261027.pdf)
+1.  デプロイメントガイドをダウンロード:[**こちら**](docs/other_docs/AmazonConnectCustomerPackage_DeploymentGuide_20261124.pdf)
 1.  パラメーターシートをダウンロード:[**こちら**](docs/other_docs/AmazonConnectCustomerPackage_ParameterSheet.xlsx)
 1.  デプロイモジュールをダウンロード:[**こちら**](docs/other_docs/amazon-connect-project.zip)
 1.  デプロイメントガイドに従い作業を実施
